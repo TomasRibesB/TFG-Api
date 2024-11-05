@@ -1,5 +1,6 @@
 import { Transform } from "class-transformer";
-import { IsNotEmpty, IsString, MaxLength, IsEmail, IsNumber, IsOptional, MinLength, IsBoolean} from "class-validator";
+import { IsNotEmpty, IsString, MaxLength, IsEmail, IsNumber, IsOptional, MinLength, IsIn} from "class-validator";
+import { Role } from "../entities/role.enum";
 
 export class UpdateUserDto {
     @IsNotEmpty()
@@ -10,7 +11,19 @@ export class UpdateUserDto {
     @IsNotEmpty()
     @IsString()
     @MaxLength(50)
-    nombre: string;
+    firstName: string;
+
+    @Transform(({ value }) => value.toLowerCase())
+    @IsNotEmpty()
+    @IsString()
+    @MaxLength(50)
+    lastName: string;
+
+    @Transform(({ value }) => value.toLowerCase())
+    @IsNotEmpty()
+    @IsString()
+    @MaxLength(20)
+    dni: string;
 
     @Transform(({ value }) => value.trim())
     @IsOptional()
@@ -29,9 +42,7 @@ export class UpdateUserDto {
     @Transform(({ value }) => value.toLowerCase())
     @IsString()
     @MaxLength(50)
-    role: string;
+    @IsIn(Object.values(Role))
+    role: Role;
 
-    @IsOptional()
-    @IsBoolean()
-    isMuted: boolean;
 }

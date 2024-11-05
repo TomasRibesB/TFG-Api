@@ -1,5 +1,6 @@
 import { Transform } from "class-transformer";
-import { IsNotEmpty, IsString, MaxLength, IsEmail, MinLength, IsBoolean, IsIn} from "class-validator";
+import { IsNotEmpty, IsString, MaxLength, IsEmail, MinLength, IsIn, Matches} from "class-validator";
+import { Role } from "src/users/entities/role.enum";
 
 export class RegisterDto {
 
@@ -7,13 +8,28 @@ export class RegisterDto {
     @IsNotEmpty()
     @IsString()
     @MaxLength(50)
-    nombre: string;
+    firstName: string;
+
+    @Transform(({ value }) => value.toLowerCase())
+    @IsNotEmpty()
+    @IsString()
+    @MaxLength(50)
+    lastName: string;
+
+    @Transform(({ value }) => value.toLowerCase())
+    @IsNotEmpty()
+    @IsString()
+    @MaxLength(20)
+    dni: string
 
     @Transform(({ value }) => value.trim())
     @IsNotEmpty()
     @IsString()
     @MaxLength(50)
-    @MinLength(6)
+    @MinLength(8)
+    @Matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/, {
+        message: 'La contraseña debe tener al menos 8 caracteres, incluir mayúsculas, minúsculas, números y un carácter especial',
+    })
     password: string;
 
     @Transform(({ value }) => value.toLowerCase().trim())
@@ -24,10 +40,7 @@ export class RegisterDto {
 
     @IsNotEmpty()
     @IsString()
-    @IsIn(['user'])
-    role: string = 'user';
-
-    @IsNotEmpty()
-    @IsBoolean()
-    isMuted: boolean = false;
+    @MaxLength(50)
+    @IsIn(['Usuario'])
+    role: Role;
 }

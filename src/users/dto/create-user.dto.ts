@@ -1,5 +1,6 @@
 import { Transform } from "class-transformer";
-import { IsNotEmpty, IsString, MaxLength, IsEmail, IsOptional, MinLength, IsBoolean} from "class-validator";
+import { IsNotEmpty, IsString, MaxLength, IsEmail, IsOptional, MinLength, IsIn} from "class-validator";
+import { Role } from "../entities/role.enum";
 
 export class CreateUserDto {
 
@@ -7,7 +8,19 @@ export class CreateUserDto {
     @IsNotEmpty()
     @IsString()
     @MaxLength(50)
-    nombre: string;
+    firstName: string;
+
+    @Transform(({ value }) => value.toLowerCase())
+    @IsNotEmpty()
+    @IsString()
+    @MaxLength(50)
+    lastName: string;
+
+    @Transform(({ value }) => value.toLowerCase())
+    @IsNotEmpty()
+    @IsString()
+    @MaxLength(20)
+    dni: string
 
     @Transform(({ value }) => value.trim())
     @IsNotEmpty()
@@ -26,9 +39,7 @@ export class CreateUserDto {
     @Transform(({ value }) => value.toLowerCase())
     @IsString()
     @MaxLength(50)
-    role: string;
+    @IsIn(Object.values(Role))
+    role: Role;
 
-    @IsOptional()
-    @IsBoolean()
-    isMuted: boolean;
 }

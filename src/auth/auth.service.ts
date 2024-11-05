@@ -33,7 +33,7 @@ export class AuthService {
         }
 
         const payload = {
-            nombre: user.nombre, email: user.email, role: user.role, id: user.id
+            firstName: user.firstName, lastName: user.lastName, dni: user.dni, email: user.email, role: user.role, id: user.id
         };
 
         const token = await this.jwtService.signAsync(payload);
@@ -43,12 +43,12 @@ export class AuthService {
 
     async register(registerDto: RegisterDto) {
         const user = await this.usersService.findOneByEmail(registerDto.email);
-        const userBynombre = await this.usersService.findOneBynombre(registerDto.nombre);
+        const userByDni = await this.usersService.findOneByDni(registerDto.dni);
         if (user) {
             throw new BadRequestException('El email ya está registrado');
         }
-        if (userBynombre) {
-            throw new BadRequestException('El nombre de usuario ya está registrado');
+        if (userByDni) {
+            throw new BadRequestException('El DNI ya está registrado');
         }
 
         await this.usersService.create(registerDto);
