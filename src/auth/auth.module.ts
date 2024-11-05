@@ -10,8 +10,8 @@ import { jwtContants } from './constants/jwt.constant';
     JwtModule.register({
       global: true,
       secret: jwtContants.secret,
-      //5 hours
-      signOptions: { expiresIn: '5h' },
+      //30 dias
+      signOptions: { expiresIn: '30d' }
     })
   ],
   controllers: [AuthController],

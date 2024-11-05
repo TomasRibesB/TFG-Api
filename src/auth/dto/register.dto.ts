@@ -1,5 +1,5 @@
 import { Transform } from "class-transformer";
-import { IsNotEmpty, IsString, MaxLength, IsEmail, MinLength, IsIn, Matches} from "class-validator";
+import { IsNotEmpty, IsString, MaxLength, IsEmail, MinLength, IsIn, Matches, IsOptional} from "class-validator";
 import { Role } from "src/users/entities/role.enum";
 
 export class RegisterDto {
@@ -38,9 +38,10 @@ export class RegisterDto {
     @MaxLength(50)
     email: string;
 
+    @IsOptional()
     @IsNotEmpty()
     @IsString()
     @MaxLength(50)
-    @IsIn(['Usuario'])
-    role: Role;
+    @IsIn([Role.Usuario])
+    role: Role = Role.Usuario;
 }
