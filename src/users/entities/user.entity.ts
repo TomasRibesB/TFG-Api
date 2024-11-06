@@ -5,6 +5,7 @@ import { Turno } from "src/turnos/entities/turno.entity";
 import { Ticket } from "src/tickets/entities/ticket.entity";
 import { TicketMensaje } from "src/ticket-mensajes/entities/ticket-mensaje.entity";
 import { PlanNutricional } from "src/plan-nutricional/entities/plan-nutricional.entity";
+import { Documento } from "src/documentos/entities/documento.entity";
 
 @Entity()
 export class User {
@@ -49,4 +50,7 @@ export class User {
 
     @OneToMany(() => PlanNutricional, planNutricional => planNutricional.nutricionista)
     planesNutricionales?: PlanNutricional[];
+
+    @OneToMany(() => Documento, documento => documento.usuario)
+    documentos?: Documento[];
 }

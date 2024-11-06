@@ -9,6 +9,7 @@ import { EjerciciosModule } from './ejercicios/ejercicios.module';
 import { RutinaEjercicioModule } from './rutina-ejercicio/rutina-ejercicio.module';
 import { RoutinesModule } from './routines/routines.module';
 import { PlanNutricionalModule } from './plan-nutricional/plan-nutricional.module';
+import { DocumentosModule } from './documentos/documentos.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -31,6 +32,7 @@ import { PlanNutricionalModule } from './plan-nutricional/plan-nutricional.modul
     TicketsModule,
     TicketMensajesModule,
     PlanNutricionalModule,
+    DocumentosModule,
   ],
   controllers: [],
   providers: [],
