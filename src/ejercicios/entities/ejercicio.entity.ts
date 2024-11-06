@@ -31,9 +31,9 @@ export class Ejercicio {
   // This is a one-to-many relationship with the RutinaEjercicio entity
   @OneToMany(
     () => RutinaEjercicio,
-    (ejercicioRegistro) => ejercicioRegistro.ejercicio,
+    (ejercicioRutina) => ejercicioRutina.ejercicio,
   )
-  ejerciciosRegistros: RutinaEjercicio[];
+  ejercicioRutina?: RutinaEjercicio[];
 
   // This is a many-to-one relationship with the CategoriaEjercicio entity
   @ManyToMany(

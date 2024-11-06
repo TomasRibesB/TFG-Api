@@ -8,11 +8,11 @@ export class RutinaEjercicio {
     id: number;
 
     // This is a many-to-one relationship with the Routine entity
-    @ManyToOne(() => Routine, routine => routine.ejerciciosRegistros)
+    @ManyToOne(() => Routine, routine => routine.rutinaEjercicio)
     routine: Routine;
 
     // This is a many-to-one relationship with the Ejercicio entity
-    @ManyToOne(() => Ejercicio, ejercicio => ejercicio.ejerciciosRegistros)
+    @ManyToOne(() => Ejercicio, ejercicio => ejercicio.ejercicioRutina)
     ejercicio: Ejercicio;
 
     @Column({ type: 'date', nullable: false })

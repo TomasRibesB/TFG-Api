@@ -14,7 +14,7 @@ export class RoutinesController {
 
   @Get(':id')
   findByPlan(@Param('id') id: number) {
-    return this.routinesService.findByPlan(id);
+    return this.routinesService.findByUser(id);
   }
 
   @Get('id/:id')

@@ -2,6 +2,12 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { TurnosModule } from './turnos/turnos.module';
+import { TicketsModule } from './tickets/tickets.module';
+import { TicketMensajesModule } from './ticket-mensajes/ticket-mensajes.module';
+import { EjerciciosModule } from './ejercicios/ejercicios.module';
+import { RutinaEjercicioModule } from './rutina-ejercicio/rutina-ejercicio.module';
+import { RoutinesModule } from './routines/routines.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -17,6 +23,12 @@ import { AuthModule } from './auth/auth.module';
     }),
     UsersModule,
     AuthModule,
+    EjerciciosModule,
+    RutinaEjercicioModule,
+    RoutinesModule,
+    TurnosModule,
+    TicketsModule,
+    TicketMensajesModule,
   ],
   controllers: [],
   providers: [],

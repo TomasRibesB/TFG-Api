@@ -1,6 +1,7 @@
 import { Column, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Role } from "./role.enum";
 import { Routine } from "src/routines/entities/routine.entity";
+import { Turno } from "src/turnos/entities/turno.entity";
 
 @Entity()
 export class User {
@@ -30,4 +31,10 @@ export class User {
 
     @OneToMany(() => Routine, routine => routine.user)
     routines?: Routine[];
+
+    @OneToMany(() => Turno, turno => turno.paciente)
+    turnosPaciente?: Turno[];
+  
+    @OneToMany(() => Turno, turno => turno.profesional)
+    turnosProfesional?: Turno[];
 }

@@ -23,8 +23,9 @@ export class RoutinesService {
     return this.routeRepository.save(createRoutineDto);
   }
 
-  async findByPlan(id: number) {
-    return this.routeRepository.find({ where: { plan: { id } }, relations: ['ejercicios', 'ejerciciosRegistros', 'ejercicios.categoriaEjercicio', 'ejercicios.gruposMusculares'] });
+  async findByUser(id: number) {
+    return this.routeRepository.find({ where: { user: { id } }, relations: ['ejercicios', 'ejerciciosRegistros', 'ejercicios.categoriaEjercicio', 'ejercicios.gruposMusculares'] });
+    //return this.routeRepository.find({ where: { plan: { id } }, relations: ['ejercicios', 'ejerciciosRegistros', 'ejercicios.categoriaEjercicio', 'ejercicios.gruposMusculares'] });
   }
 
   async findById(id: number) {
@@ -63,11 +64,14 @@ export class RoutinesService {
     routine.description = updateRoutineDto.description;
 
     // Para actualizar la relación de muchos a muchos, primero debemos obtener las entidades relacionadas
-    routine.ejercicios = [];
+    routine.rutinaEjercicio = [];
     if (updateRoutineDto.ejercicios && Array.isArray(updateRoutineDto.ejercicios) && updateRoutineDto.ejercicios.length > 0) {
       for (const ejercicio of updateRoutineDto.ejercicios) {
         const ejercicioEntity = await this.ejercicioRepository.findOne({ where: { id: ejercicio.id } });
-        routine.ejercicios.push(ejercicioEntity);
+        const rutinaEjercicio = new RutinaEjercicio();
+        rutinaEjercicio.ejercicio = ejercicioEntity;
+        rutinaEjercicio.routine = routine;
+        routine.rutinaEjercicio.push(rutinaEjercicio);
       }
     }
 
@@ -94,7 +98,7 @@ export class RoutinesService {
       await this.ejercicioRegistroRepository.remove(exerciseRegistros);
     }
     //2
-    routine.ejercicios = routine.ejercicios.filter(e => e.id !== exerciseId);
+    routine.rutinaEjercicio = routine.rutinaEjercicio.filter(re => re.ejercicio.id !== exerciseId);
     return this.routeRepository.save(routine);
   }
 }

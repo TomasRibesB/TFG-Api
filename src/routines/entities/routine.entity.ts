@@ -13,8 +13,8 @@ export class Routine {
     @Column({ length: 300, nullable: true })
     description?: string;
 
-    @OneToMany(() => RutinaEjercicio, ejercicioRegistro => ejercicioRegistro.routine)
-    ejerciciosRegistros?: RutinaEjercicio[];
+    @OneToMany(() => RutinaEjercicio, rutinaEjercicio => rutinaEjercicio.routine)
+    rutinaEjercicio?: RutinaEjercicio[];
 
     @ManyToOne(() => User, user => user.routines)
     user: User;
