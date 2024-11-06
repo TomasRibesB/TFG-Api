@@ -1,5 +1,6 @@
-import { Column, DeleteDateColumn, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { Role } from "./role.enum";
+import { Routine } from "src/routines/entities/routine.entity";
 
 @Entity()
 export class User {
@@ -26,4 +27,7 @@ export class User {
 
     @DeleteDateColumn()
     deletedAt: Date;
+
+    @OneToMany(() => Routine, routine => routine.user)
+    routines?: Routine[];
 }
