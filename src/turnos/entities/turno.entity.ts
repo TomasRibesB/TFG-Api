@@ -5,7 +5,7 @@ import { EstadoTurno } from './estadosTurnos.enum';
 @Entity()
 export class Turno {
   @PrimaryGeneratedColumn()
-  turnoId: number;
+  id: number;
 
   @Column({ nullable: false })
   fecha: Date;

@@ -2,6 +2,8 @@ import { Column, DeleteDateColumn, Entity, OneToMany, PrimaryGeneratedColumn } f
 import { Role } from "./role.enum";
 import { Routine } from "src/routines/entities/routine.entity";
 import { Turno } from "src/turnos/entities/turno.entity";
+import { Ticket } from "src/tickets/entities/ticket.entity";
+import { TicketMensaje } from "src/ticket-mensajes/entities/ticket-mensaje.entity";
 
 @Entity()
 export class User {
@@ -37,4 +39,10 @@ export class User {
   
     @OneToMany(() => Turno, turno => turno.profesional)
     turnosProfesional?: Turno[];
+
+    @OneToMany(() => Ticket, ticket => ticket.usuario)
+    tickets?: Ticket[];
+
+    @OneToMany(() => TicketMensaje, mensaje => mensaje.emisor)
+    mensajesEnviados?: TicketMensaje[];
 }
