@@ -8,6 +8,7 @@ import { TicketMensajesModule } from './ticket-mensajes/ticket-mensajes.module';
 import { EjerciciosModule } from './ejercicios/ejercicios.module';
 import { RutinaEjercicioModule } from './rutina-ejercicio/rutina-ejercicio.module';
 import { RoutinesModule } from './routines/routines.module';
+import { PlanNutricionalModule } from './plan-nutricional/plan-nutricional.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -29,6 +30,7 @@ import { RoutinesModule } from './routines/routines.module';
     TurnosModule,
     TicketsModule,
     TicketMensajesModule,
+    PlanNutricionalModule,
   ],
   controllers: [],
   providers: [],
