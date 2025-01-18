@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
@@ -11,6 +11,7 @@ import { RoutinesModule } from './routines/routines.module';
 import { PlanNutricionalModule } from './plan-nutricional/plan-nutricional.module';
 import { DocumentosModule } from './documentos/documentos.module';
 import { ChatModule } from './tickets/chat/chat.module';
+import { LoggerMiddleware } from './middlewares/logger/logger.middleware';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -39,4 +40,8 @@ import { ChatModule } from './tickets/chat/chat.module';
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  configure(consumer: MiddlewareConsumer) {
+    consumer.apply(LoggerMiddleware).forRoutes('*');
+  }
+}

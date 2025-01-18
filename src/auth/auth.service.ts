@@ -52,7 +52,7 @@ export class AuthService {
         }
 
         await this.usersService.create(registerDto);
-        return;
+        return { message: 'Usuario registrado con éxito' };
     }
 
     async getProfile(email: string) {
