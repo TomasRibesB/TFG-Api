@@ -16,14 +16,17 @@ export class Ejercicio {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 50, nullable: false })
+  @Column({ length: 120, nullable: false })
   name: string;
 
   @Column({ length: 300, nullable: true })
   description?: string;
 
   @Column({ length: 300, nullable: true })
-  image?: string;
+  demostration?: string;
+
+  @Column({ length: 300, nullable: true })
+  explication?: string;
 
   @Column({ length: 1000, nullable: true })
   keywords?: string;
@@ -51,6 +54,6 @@ export class Ejercicio {
   @JoinTable()
   gruposMusculares: GruposMusculares[];
 
-  @Column({ type: 'enum', enum: UnidadMedida, nullable: false })
+  @Column({ type: 'enum', enum: UnidadMedida, nullable: false, default: UnidadMedida.Ninguna })
   unidadMedida: UnidadMedida;
 }

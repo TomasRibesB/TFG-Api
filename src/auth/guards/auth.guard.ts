@@ -21,7 +21,7 @@ export class AuthGuard implements CanActivate {
         secret: jwtContants.secret,
       });
       request.user = payload;
-    } catch (error) {
+    } catch {
       throw new UnauthorizedException('Expired session or not authorized');
     }
 

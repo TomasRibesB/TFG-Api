@@ -32,13 +32,15 @@ export class AuthService {
             throw new UnauthorizedException('Email o contraseña incorrectos');
         }
 
-        const payload = {
+        let payload = {
             firstName: user.firstName, lastName: user.lastName, dni: user.dni, email: user.email, role: user.role, id: user.id
         };
 
         const token = await this.jwtService.signAsync(payload);
 
-        return { token: token };
+        payload = { ...payload, token } as typeof payload & { token: string };
+
+        return payload;
     }
 
     async register(registerDto: RegisterDto) {
@@ -50,9 +52,10 @@ export class AuthService {
         if (userByDni) {
             throw new BadRequestException('El DNI ya está registrado');
         }
-
+        const plainPassword = registerDto.password;
         await this.usersService.create(registerDto);
-        return { message: 'Usuario registrado con éxito' };
+        console.log('Usuario creado', registerDto.email, plainPassword);
+        return this.login({ email: registerDto.email, password: plainPassword });
     }
 
     async getProfile(email: string) {

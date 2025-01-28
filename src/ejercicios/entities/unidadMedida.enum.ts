@@ -6,4 +6,5 @@ export enum UnidadMedida {
     PulsacionesPorMinuto = 'bpm',
     Grados = '°',
     Calorias = 'kcal',
+    Ninguna = 'none',
 }

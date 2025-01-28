@@ -24,8 +24,7 @@ export class RoutinesService {
   }
 
   async findByUser(id: number) {
-    return this.routeRepository.find({ where: { user: { id } }, relations: ['ejercicios', 'ejerciciosRegistros', 'ejercicios.categoriaEjercicio', 'ejercicios.gruposMusculares'] });
-    //return this.routeRepository.find({ where: { plan: { id } }, relations: ['ejercicios', 'ejerciciosRegistros', 'ejercicios.categoriaEjercicio', 'ejercicios.gruposMusculares'] });
+    return this.routeRepository.find({ where: { user: { id } }, relations: ['rutinaEjercicio', 'rutinaEjercicio.ejercicio'] });
   }
 
   async findById(id: number) {

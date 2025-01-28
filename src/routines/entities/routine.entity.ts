@@ -18,4 +18,7 @@ export class Routine {
 
     @ManyToOne(() => User, user => user.routines)
     user: User;
+
+    @ManyToOne(() => User, user => user.routines)
+    trainer: User;
 }

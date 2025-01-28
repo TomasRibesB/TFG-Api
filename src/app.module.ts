@@ -23,7 +23,7 @@ import { LoggerMiddleware } from './middlewares/logger/logger.middleware';
       database: process.env.DB_NAME,
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       synchronize: true,
-      logging: true,
+      logging: false,
     }),
     UsersModule,
     AuthModule,
