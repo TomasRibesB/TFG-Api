@@ -21,4 +21,11 @@ export class Routine {
 
     @ManyToOne(() => User, user => user.routines)
     trainer: User;
+
+    @Column({
+        type: 'timestamp',
+        default: () => 'CURRENT_TIMESTAMP',
+        nullable: false
+    })
+    createdAt: Date;
 }

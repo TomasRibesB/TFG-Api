@@ -15,7 +15,11 @@ export class RutinaEjercicio {
     @ManyToOne(() => Ejercicio, ejercicio => ejercicio.ejercicioRutina)
     ejercicio: Ejercicio;
 
-    @Column({ type: 'date', nullable: false })
+    @Column({
+        type: 'timestamp',
+        default: () => 'CURRENT_TIMESTAMP',
+        nullable: false
+    })
     fecha: Date;
 
     //series repeticiones medicion string para que sean flexibles
