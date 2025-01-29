@@ -19,7 +19,7 @@ export class Routine {
     @ManyToOne(() => User, user => user.routines)
     user: User;
 
-    @ManyToOne(() => User, user => user.routines)
+    @ManyToOne(() => User, user => user.routinesTrainer)
     trainer: User;
 
     @Column({

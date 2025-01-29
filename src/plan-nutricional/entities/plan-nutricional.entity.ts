@@ -6,7 +6,11 @@ export class PlanNutricional {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: false })
+  @Column({
+    type: 'timestamp',
+    default: () => 'CURRENT_TIMESTAMP',
+    nullable: false,
+  })
   fechaCreacion: Date;
 
   @Column({ length: 100, nullable: false })
@@ -36,6 +40,6 @@ export class PlanNutricional {
   @ManyToOne(() => User, (user) => user.planesNutricionales)
   nutricionista: User;
 
-  @ManyToOne(() => User, (user) => user.planesNutricionales)
+  @ManyToOne(() => User, (user) => user.planesNutricionalesPaciente)
   paciente: User;
 }

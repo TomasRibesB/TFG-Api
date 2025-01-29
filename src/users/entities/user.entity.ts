@@ -36,6 +36,9 @@ export class User {
     @OneToMany(() => Routine, routine => routine.user)
     routines?: Routine[];
 
+    @OneToMany(() => Routine, routine => routine.trainer)
+    routinesTrainer?: Routine[];
+
     @OneToMany(() => Turno, turno => turno.paciente)
     turnosPaciente?: Turno[];
   
@@ -50,6 +53,9 @@ export class User {
 
     @OneToMany(() => PlanNutricional, planNutricional => planNutricional.nutricionista)
     planesNutricionales?: PlanNutricional[];
+
+    @OneToMany(() => PlanNutricional, planNutricional => planNutricional.paciente)
+    planesNutricionalesPaciente?: PlanNutricional[];
 
     @OneToMany(() => Documento, documento => documento.usuario)
     documentos?: Documento[];
