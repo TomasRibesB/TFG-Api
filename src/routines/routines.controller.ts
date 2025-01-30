@@ -18,30 +18,6 @@ export class RoutinesController {
   @UseGuards(AuthGuard)
   @Get()
   findByUser(@Req() request: RequestWithUser) {
-    return this.routinesService.findByUser(request.user.id);
-  }
-
-  @UseGuards(AuthGuard)
-  @Get('id/:id')
-  findById(@Param('id') id: number) {
-    return this.routinesService.findById(id);
-  }
-
-  @UseGuards(AuthGuard)
-  @Patch()
-  update(@Body() updateRoutineDto: UpdateRoutineDto) {
-    return this.routinesService.update(updateRoutineDto);
-  }
-
-  @UseGuards(AuthGuard)
-  @Delete(':id')
-  remove(@Param('id') id: number) {
-    return this.routinesService.remove(id);
-  }
-
-  @UseGuards(AuthGuard)
-  @Delete('ejercicio/:routineId/:ejercicioId')
-  removeExercise(@Param('routineId') routineId: number, @Param('ejercicioId') ejercicioId: number) {
-    return this.routinesService.removeExercise(routineId, ejercicioId);
+    return this.routinesService.findByUser(request.user.id) || [];
   }
 }

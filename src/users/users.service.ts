@@ -8,11 +8,10 @@ import * as bcryptjs from 'bcryptjs';
 
 @Injectable()
 export class UsersService {
-
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
-  ) { }
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     createUserDto.password = await bcryptjs.hash(createUserDto.password, 10); // Hash the password
@@ -42,5 +41,34 @@ export class UsersService {
 
   async remove(id: number) {
     return await this.userRepository.softDelete(id);
+  }
+
+  async getProfesionalesByUser(id: number) {
+    console.log('id', id);
+    const user =
+      (await this.userRepository.find({
+        where: { id },
+        relations: ['profesionales'],
+      })) || [];
+
+    const profesionales = user.map((user) => user.profesionales).flat();
+    for (const profesional of profesionales) {
+      delete profesional.password;
+    }
+    return profesionales;
+  }
+
+  async getUsuariosByProfesional(id: number) {
+    const user =
+      (await this.userRepository.find({
+        where: { id },
+        relations: ['usuarios'],
+      })) || [];
+
+    const usuarios = user.map((user) => user.usuarios).flat();
+    for (const usuario of usuarios) {
+      delete usuario.password;
+    }
+    return usuarios;
   }
 }
