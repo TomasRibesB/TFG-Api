@@ -5,6 +5,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import * as bcryptjs from 'bcryptjs';
+import { EstadoTurno } from 'src/turnos/entities/estadosTurnos.enum';
 
 @Injectable()
 export class UsersService {
@@ -44,17 +45,21 @@ export class UsersService {
   }
 
   async getProfesionalesByUser(id: number) {
-    console.log('id', id);
     const user =
       (await this.userRepository.find({
         where: { id },
-        relations: ['profesionales'],
+        relations: ['profesionales', 'profesionales.turnosProfesional'],
       })) || [];
 
-    const profesionales = user.map((user) => user.profesionales).flat();
+    const profesionales = user.map((u) => u.profesionales).flat();
+
     for (const profesional of profesionales) {
+      profesional.turnosProfesional = profesional.turnosProfesional?.filter(
+        (turno) => turno.estado === EstadoTurno.Libre,
+      );
       delete profesional.password;
     }
+
     return profesionales;
   }
 

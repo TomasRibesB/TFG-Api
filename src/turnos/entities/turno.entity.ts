@@ -7,17 +7,9 @@ export class Turno {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: false })
-  fecha: Date;
-
-  @Column({ nullable: false })
-  hora: string;
-
-  @Column({ nullable: false })
-  pacienteId: number;
-
-  @Column({ nullable: false })
-  profesionalId: number;
+  //datetime fechaHora
+  @Column({ nullable: false, type: 'datetime' })
+  fechaHora: Date;
 
   @Column({ type: 'enum', enum: EstadoTurno, default: EstadoTurno.Pendiente })
   estado: EstadoTurno;
