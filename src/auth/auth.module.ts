@@ -11,7 +11,7 @@ import { jwtContants } from './constants/jwt.constant';
       global: true,
       secret: jwtContants.secret,
       //30 dias
-      signOptions: { expiresIn: '30d' }
+      signOptions: { expiresIn: '1d' }
     })
   ],
   controllers: [AuthController],
