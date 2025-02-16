@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { TipoDocumento } from './tipoDocumentos.enum';
+import { TipoProfesional } from 'src/tipo-profesional/entities/tipo-profesional.entity';
 
 @Entity()
 export class Documento {
@@ -40,6 +41,15 @@ export class Documento {
 
   @Column({ length: 50, nullable: true })
   apellidoProfesional: string | null; //por si el profesional no esta registrado en la base de datos
+
+  @Column({ length: 50, nullable: true })
+  dniProfesional: string | null; //por si el profesional no esta registrado en la base de datos
+
+  @Column({ length: 50, nullable: true })
+  emailProfesional: string | null; //por si el profesional no esta registrado en la base de datos
+
+  @ManyToOne(() => TipoProfesional, (tipoProfesional) => tipoProfesional.documentos, { eager: true })
+  tipoProfesional: TipoProfesional | null; //por si el profesional no esta registrado en la base de datos
 
   @ManyToOne(() => User, (user) => user.documentos)
   profesional: User | null; //si el profesional esta registrado en la base de datos

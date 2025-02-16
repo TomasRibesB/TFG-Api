@@ -12,6 +12,7 @@ import { PlanNutricionalModule } from './plan-nutricional/plan-nutricional.modul
 import { DocumentosModule } from './documentos/documentos.module';
 import { ChatModule } from './tickets/chat/chat.module';
 import { LoggerMiddleware } from './middlewares/logger/logger.middleware';
+import { TipoProfesionalModule } from './tipo-profesional/tipo-profesional.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -36,6 +37,7 @@ import { LoggerMiddleware } from './middlewares/logger/logger.middleware';
     PlanNutricionalModule,
     DocumentosModule,
     ChatModule,
+    TipoProfesionalModule,
   ],
   controllers: [],
   providers: [],

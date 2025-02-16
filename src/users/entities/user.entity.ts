@@ -14,6 +14,7 @@ import { Ticket } from 'src/tickets/entities/ticket.entity';
 import { TicketMensaje } from 'src/ticket-mensajes/entities/ticket-mensaje.entity';
 import { PlanNutricional } from 'src/plan-nutricional/entities/plan-nutricional.entity';
 import { Documento } from 'src/documentos/entities/documento.entity';
+import { UserTipoProfesional } from 'src/tipo-profesional/entities/user-tipo-profesional.entity';
 
 @Entity()
 export class User {
@@ -83,4 +84,8 @@ export class User {
 
   @ManyToMany(() => User, (user) => user.usuarios)
   profesionales: User[];
+
+  //tipo profesional
+  @OneToMany(() => UserTipoProfesional, (userTipoProfesional) => userTipoProfesional.user)
+  userTipoProfesionales: UserTipoProfesional[];
 }

@@ -22,8 +22,10 @@ export class ChatGateway implements OnModuleInit {
       // Extraer y verificar token del handshake
       const token = socket.handshake.auth.token;
       if (!token) {
+        console.error('Token no proporcionado');
         return socket.disconnect();
       }
+      console.log('Token: ', token);
       try {
         const payload = await this.jwtService.verifyAsync(token, {
           secret: jwtContants.secret,
