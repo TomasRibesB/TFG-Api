@@ -1,18 +1,15 @@
 import { Column, Entity, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
 import { Ticket } from 'src/tickets/entities/ticket.entity';
 import { User } from 'src/users/entities/user.entity';
-
-export enum EstadoMensaje {
-  Enviado = 'Enviado',
-  Enviando = 'Enviando',
-  NoEnviado = 'No Enviado',
-  Oculto = 'Oculto',
-}
+import { EstadoMensaje } from './estadoMensaje.enum';
 
 @Entity()
 export class TicketMensaje {
   @PrimaryGeneratedColumn()
   id: number;
+
+  @Column({ nullable: false })
+  idRef: string;
 
   @ManyToOne(() => Ticket, (ticket) => ticket.mensajes)
   ticket: Ticket;
