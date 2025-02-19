@@ -40,6 +40,7 @@ export class ChatGateway implements OnModuleInit {
       }
 
       socket.on('joinChat', async (ticketId: string) => {
+        console.log('Joining chat', ticketId);
         // Obtener el ticket de la base de datos (asegúrate de implementarlo en ChatService)
         const ticket = await this.chatService.getTicket(ticketId);
         const userId = socket.data.user.id;

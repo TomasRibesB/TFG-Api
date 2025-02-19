@@ -12,4 +12,10 @@ export class TicketsController {
     findAllByUser(@Req() request: RequestWithUser) {
       return this.ticketsService.findTicketsByUser(request.user.id);
     }
+
+    @UseGuards(AuthGuard)
+    @Get(':id')
+    findOne(@Param('id') id: string, @Req() request: RequestWithUser) {
+      return this.ticketsService.findTicketById(+id, request.user.id);
+    }
 }
