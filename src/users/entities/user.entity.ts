@@ -30,7 +30,7 @@ export class User {
   @Column({ length: 50, unique: true, nullable: false })
   dni: string;
 
-  @Column({ length: 300, nullable: false })
+  @Column({ length: 300, nullable: false, select: false })
   password: string;
 
   @Column({ length: 50, nullable: false })
@@ -53,9 +53,6 @@ export class User {
 
   @OneToMany(() => Turno, (turno) => turno.profesional)
   turnosProfesional?: Turno[];
-
-  @OneToMany(() => Ticket, (ticket) => ticket.usuario)
-  tickets?: Ticket[];
 
   @OneToMany(() => TicketMensaje, (mensaje) => mensaje.emisor)
   mensajesEnviados?: TicketMensaje[];
@@ -86,6 +83,18 @@ export class User {
   profesionales: User[];
 
   //tipo profesional
-  @OneToMany(() => UserTipoProfesional, (userTipoProfesional) => userTipoProfesional.user)
+  @OneToMany(
+    () => UserTipoProfesional,
+    (userTipoProfesional) => userTipoProfesional.user,
+  )
   userTipoProfesionales: UserTipoProfesional[];
+
+  @OneToMany(() => Ticket, (ticket) => ticket.solicitante)
+  ticketsSolicitante: Ticket[];
+
+  @OneToMany(() => Ticket, (ticket) => ticket.receptor)
+  ticketsReceptor: Ticket[];
+
+  @OneToMany(() => Ticket, (ticket) => ticket.usuario)
+  ticketsUsuario: Ticket[];
 }

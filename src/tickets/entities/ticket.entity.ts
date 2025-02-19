@@ -16,14 +16,14 @@ export class Ticket {
   @Column({ nullable: false })
   fechaCreacion: Date;
 
-  @ManyToOne(() => User, (user) => user.tickets)
-  solicitante: number;
+  @ManyToOne(() => User, (user) => user.ticketsSolicitante)
+  solicitante: User;
 
-  @ManyToOne(() => User, (user) => user.tickets)
-  receptor: number;
+  @ManyToOne(() => User, (user) => user.ticketsReceptor)
+  receptor: User;
 
-  @ManyToOne(() => User, (user) => user.tickets)
-  usuario: number;
+  @ManyToOne(() => User, (user) => user.ticketsUsuario)
+  usuario: User;
 
   @Column({ default: false })
   isAutorizado: boolean;

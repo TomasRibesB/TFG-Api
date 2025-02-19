@@ -28,7 +28,11 @@ export class UsersService {
   }
 
   async findOneByEmail(email: string) {
-    return await this.userRepository.findOneBy({ email });
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .addSelect('user.password')
+      .where('user.email = :email', { email })
+      .getOne();
   }
 
   async findOneByDni(dni: string) {
@@ -57,7 +61,6 @@ export class UsersService {
       profesional.turnosProfesional = profesional.turnosProfesional?.filter(
         (turno) => turno.estado === EstadoTurno.Libre,
       );
-      delete profesional.password;
     }
 
     return profesionales;

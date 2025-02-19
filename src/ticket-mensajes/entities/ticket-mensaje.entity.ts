@@ -17,7 +17,9 @@ export class TicketMensaje {
   @Column({ type: 'datetime', nullable: false })
   fecha: Date;
 
-  @ManyToOne(() => User, (user) => user.mensajesEnviados)
+  @ManyToOne(() => User, (user) => user.mensajesEnviados, {
+    eager: true,
+  })
   emisor: User;
 
   @Column({

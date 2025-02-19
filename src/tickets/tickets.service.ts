@@ -12,9 +12,7 @@ export class TicketsService {
 
   findTicketsByUser(id: number) {
     return this.ticketRepository.find({
-      where: {
-        usuario: id,
-      },
+      where: { usuario: { id } },
       relations: ['receptor', 'solicitante', 'mensajes'],
     });
   }

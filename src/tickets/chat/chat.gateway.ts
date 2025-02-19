@@ -39,17 +39,43 @@ export class ChatGateway implements OnModuleInit {
         return socket.disconnect();
       }
 
-      socket.on('joinChat', (ticketId: string) => {
-        // Aquí puedes agregar lógica para verificar que
-        // el usuario (socket.data.user.id) pertenezca al chat
-        // (por ejemplo, consultar el ticket en la base de datos)
-        socket.join(ticketId);
-        console.log(`Socket ${socket.id} joined chat ${ticketId}`);
+      socket.on('joinChat', async (ticketId: string) => {
+        // Obtener el ticket de la base de datos (asegúrate de implementarlo en ChatService)
+        const ticket = await this.chatService.getTicket(ticketId);
+        const userId = socket.data.user.id;
+
+        // Validar que el usuario sea solicitante, receptor o usuario del ticket
+        if (
+          ticket.solicitante.id === userId ||
+          ticket.receptor.id === userId ||
+          ticket.usuario.id === userId
+        ) {
+          socket.join(ticketId);
+          console.log(`Socket ${socket.id} joined chat ${ticketId}`);
+        } else {
+          console.error(`User ${userId} not authorized for chat ${ticketId}`);
+          socket.emit('unauthorized', {
+            message: 'No tienes permisos para este chat',
+          });
+          socket.disconnect();
+        }
       });
 
-      socket.on('message', (data) => {
-        console.log('Message received: ', data);
-        this.server.to(data.ticketId).emit('message', data);
+      socket.on('message', async (data) => {
+        try {
+          console.log('Message received: ', data);
+
+          // 1. Guardar en la base de datos
+          const savedMessage = await this.chatService.saveMessage(data);
+
+          // 2. Reemitir el mensaje guardado (ahora con ID de la DB, etc.)
+          //    Nota: data.ticketId debe ser data.ticket.id o similar
+          const ticketId = data.ticket?.id;
+          this.server.to(String(ticketId)).emit('message', savedMessage);
+        } catch (error) {
+          console.error('Error al guardar mensaje:', error);
+          socket.emit('errorSavingMessage', { error: error.message });
+        }
       });
 
       socket.on('disconnect', () => {
