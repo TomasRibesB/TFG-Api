@@ -13,10 +13,15 @@ export class TurnosService {
   ) {}
   findByUser(id: number) {
     return this.turnoRepository.find({
-      where: {
-        paciente: { id },
-      },
-      relations: ['profesional'],
+      where: [
+        {
+          paciente: { id },
+        },
+        {
+          profesional: { id },
+        },
+      ],
+      relations: ['profesional', 'paciente'],
     });
   }
 }

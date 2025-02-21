@@ -23,10 +23,22 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Get('profesionales/recordatorios')
+  @UseGuards(AuthGuard)
+  getProfesionalesRecordatorios(@Req() request: RequestWithUser) {
+    return this.usersService.getRecordatoriosByProfesional(request.user.id);
+  }
+
   @Get('profesionales')
   @UseGuards(AuthGuard)
   getProfesionalesByUser(@Req() request: RequestWithUser) {
     return this.usersService.getProfesionalesByUser(request.user.id);
+  }
+
+  @Get('clientes')
+  @UseGuards(AuthGuard)
+  getClientesByUser(@Req() request: RequestWithUser) {
+    return this.usersService.getUsuariosByProfesional(request.user.id);
   }
 
   @Get(':id')
@@ -47,4 +59,6 @@ export class UsersController {
     console.log('id', id);
     return this.usersService.remove(+id);
   }
+
+
 }
