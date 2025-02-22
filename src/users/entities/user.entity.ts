@@ -15,6 +15,7 @@ import { TicketMensaje } from 'src/ticket-mensajes/entities/ticket-mensaje.entit
 import { PlanNutricional } from 'src/plan-nutricional/entities/plan-nutricional.entity';
 import { Documento } from 'src/documentos/entities/documento.entity';
 import { UserTipoProfesional } from 'src/tipo-profesional/entities/user-tipo-profesional.entity';
+import { Sex } from './sex.enum';
 
 @Entity()
 export class User {
@@ -41,6 +42,12 @@ export class User {
 
   @DeleteDateColumn()
   deletedAt: Date;
+
+  @Column({ type: 'enum', enum: Sex, nullable: true })
+  sex: Sex;
+
+  @Column({ nullable: true })
+  birthdate: Date;
 
   @OneToMany(() => Routine, (routine) => routine.user)
   routines?: Routine[];

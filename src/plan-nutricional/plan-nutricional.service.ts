@@ -17,7 +17,19 @@ export class PlanNutricionalService {
   }
 
   findByUser(id: number) {
-    return this.planNutricionalRepository.find({ where: { paciente: { id } }, relations: ['nutricionista'] });
+    return this.planNutricionalRepository.find({
+      where: { paciente: { id } },
+      relations: ['nutricionista'],
+    });
+  }
+
+  findForNutricionistByUser(nutricionistId: number, userId: number) {
+    return this.planNutricionalRepository.find({
+      where: {
+        nutricionista: { id: nutricionistId },
+        paciente: { id: userId },
+      },
+    });
   }
 
   findOne(id: number) {

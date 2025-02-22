@@ -1,15 +1,14 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRoutineDto } from './dto/create-routine.dto';
 import { UpdateRoutineDto } from './dto/update-routine.dto';
-import { Ejercicio } from "src/ejercicios/entities/ejercicio.entity";
+import { Ejercicio } from 'src/ejercicios/entities/ejercicio.entity';
 import { Routine } from './entities/routine.entity';
-import { RutinaEjercicio } from "src/rutina-ejercicio/entities/rutina-ejercicio.entity";
+import { RutinaEjercicio } from 'src/rutina-ejercicio/entities/rutina-ejercicio.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class RoutinesService {
-
   constructor(
     @InjectRepository(Ejercicio)
     private ejercicioRepository: Repository<Ejercicio>,
@@ -17,46 +16,74 @@ export class RoutinesService {
     private ejercicioRegistroRepository: Repository<RutinaEjercicio>,
     @InjectRepository(Routine)
     private routeRepository: Repository<Routine>,
-  ) { }
+  ) {}
 
   async create(createRoutineDto: CreateRoutineDto) {
     return this.routeRepository.save(createRoutineDto);
   }
 
   async findByUser(id: number) {
-    return this.routeRepository.find({ where: { user: { id } }, relations: ['rutinaEjercicio', 'rutinaEjercicio.ejercicio'] });
+    return this.routeRepository.find({
+      where: { user: { id } },
+      relations: ['rutinaEjercicio', 'rutinaEjercicio.ejercicio', 'trainer'],
+    });
+  }
+
+  async findForTrainerByUser(trainerId: number, userId: number) {
+    return this.routeRepository.find({
+      where: { user: { id: userId }, trainer: { id: trainerId } },
+      relations: ['rutinaEjercicio', 'rutinaEjercicio.ejercicio'],
+    });
   }
 
   async findById(id: number) {
-    return this.routeRepository.createQueryBuilder('routine')
+    return this.routeRepository
+      .createQueryBuilder('routine')
       .leftJoinAndSelect('routine.ejercicios', 'ejercicio')
       .leftJoinAndSelect('ejercicio.categoriaEjercicio', 'tipoEjercicio')
       .leftJoinAndSelect('ejercicio.gruposMusculares', 'grupoMuscular')
-      .leftJoinAndSelect('ejercicio.ejerciciosRegistros', 'ejerciciosRegistros', 'ejerciciosRegistros.routineId = routine.id')
+      .leftJoinAndSelect(
+        'ejercicio.ejerciciosRegistros',
+        'ejerciciosRegistros',
+        'ejerciciosRegistros.routineId = routine.id',
+      )
       .where('routine.id = :id', { id })
       .getOne();
   }
 
   async update(updateRoutineDto: UpdateRoutineDto) {
     //si tiene ejercicios el dto verifico si existen
-    if (updateRoutineDto.ejercicios && Array.isArray(updateRoutineDto.ejercicios) && updateRoutineDto.ejercicios.length > 0) {
+    if (
+      updateRoutineDto.ejercicios &&
+      Array.isArray(updateRoutineDto.ejercicios) &&
+      updateRoutineDto.ejercicios.length > 0
+    ) {
       for (const ejercicio of updateRoutineDto.ejercicios) {
-        const ejercicioExist = await this.ejercicioRepository.findOne({ where: { id: ejercicio.id } });
+        const ejercicioExist = await this.ejercicioRepository.findOne({
+          where: { id: ejercicio.id },
+        });
         if (!ejercicioExist) {
-          throw new Error('No se pueden crear ejercicios, solo se pueden agregar los existentes a tu rutina');
+          throw new Error(
+            'No se pueden crear ejercicios, solo se pueden agregar los existentes a tu rutina',
+          );
         }
       }
     }
     //si tiene ejercicios registros el dto los creo
-    if (updateRoutineDto.ejerciciosRegistros && updateRoutineDto.ejerciciosRegistros.length > 0) {
+    if (
+      updateRoutineDto.ejerciciosRegistros &&
+      updateRoutineDto.ejerciciosRegistros.length > 0
+    ) {
       for (const ejercicioRegistro of updateRoutineDto.ejerciciosRegistros) {
         await this.ejercicioRegistroRepository.save(ejercicioRegistro);
       }
     }
-    console.log("updateRoutineDto", updateRoutineDto);
+    console.log('updateRoutineDto', updateRoutineDto);
 
     // Primero obtenemos la rutina que queremos actualizar
-    const routine = await this.routeRepository.findOne({ where: { id: updateRoutineDto.id } });
+    const routine = await this.routeRepository.findOne({
+      where: { id: updateRoutineDto.id },
+    });
 
     // Luego actualizamos las propiedades que queremos cambiar
     routine.name = updateRoutineDto.name;
@@ -64,9 +91,15 @@ export class RoutinesService {
 
     // Para actualizar la relación de muchos a muchos, primero debemos obtener las entidades relacionadas
     routine.rutinaEjercicio = [];
-    if (updateRoutineDto.ejercicios && Array.isArray(updateRoutineDto.ejercicios) && updateRoutineDto.ejercicios.length > 0) {
+    if (
+      updateRoutineDto.ejercicios &&
+      Array.isArray(updateRoutineDto.ejercicios) &&
+      updateRoutineDto.ejercicios.length > 0
+    ) {
       for (const ejercicio of updateRoutineDto.ejercicios) {
-        const ejercicioEntity = await this.ejercicioRepository.findOne({ where: { id: ejercicio.id } });
+        const ejercicioEntity = await this.ejercicioRepository.findOne({
+          where: { id: ejercicio.id },
+        });
         const rutinaEjercicio = new RutinaEjercicio();
         rutinaEjercicio.ejercicio = ejercicioEntity;
         rutinaEjercicio.routine = routine;
@@ -86,18 +119,27 @@ export class RoutinesService {
     //1. verifico que no tenga registros, si los tiene los borro
     //2. borro la relacion
     //3. ni el ejercicio ni la rutina se borran, solo la relacion
-    const routine = await this.routeRepository.findOne({ where: { id: routineId }, relations: ['ejercicios'] });
-    const exercise = await this.ejercicioRepository.findOne({ where: { id: exerciseId } });
+    const routine = await this.routeRepository.findOne({
+      where: { id: routineId },
+      relations: ['ejercicios'],
+    });
+    const exercise = await this.ejercicioRepository.findOne({
+      where: { id: exerciseId },
+    });
     if (!routine || !exercise) {
       throw new Error('No se encontró la rutina o el ejercicio');
     }
     //1
-    const exerciseRegistros = await this.ejercicioRegistroRepository.find({ where: { ejercicio: { id: exerciseId } } });
+    const exerciseRegistros = await this.ejercicioRegistroRepository.find({
+      where: { ejercicio: { id: exerciseId } },
+    });
     if (exerciseRegistros && exerciseRegistros.length > 0) {
       await this.ejercicioRegistroRepository.remove(exerciseRegistros);
     }
     //2
-    routine.rutinaEjercicio = routine.rutinaEjercicio.filter(re => re.ejercicio.id !== exerciseId);
+    routine.rutinaEjercicio = routine.rutinaEjercicio.filter(
+      (re) => re.ejercicio.id !== exerciseId,
+    );
     return this.routeRepository.save(routine);
   }
 }

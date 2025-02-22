@@ -1,4 +1,14 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Req,
+} from '@nestjs/common';
 import { RoutinesService } from './routines.service';
 import { CreateRoutineDto } from './dto/create-routine.dto';
 import { UpdateRoutineDto } from './dto/update-routine.dto';
@@ -19,5 +29,14 @@ export class RoutinesController {
   @Get()
   findByUser(@Req() request: RequestWithUser) {
     return this.routinesService.findByUser(request.user.id) || [];
+  }
+
+  @UseGuards(AuthGuard)
+  @Get(':id')
+  findForTrainerByUser(
+    @Param('id') id: string,
+    @Req() request: RequestWithUser,
+  ) {
+    return this.routinesService.findForTrainerByUser(request.user.id, +id);
   }
 }
