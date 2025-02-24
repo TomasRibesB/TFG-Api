@@ -24,4 +24,25 @@ export class DocumentosService {
       relations: ['profesional'],
     });
   }
+
+  findDocumentsFoyProfesionalByUser(profesionalId: number, userId: number) {
+    console.log(profesionalId, userId);
+    return this.documentoRepository.find({
+      where: {
+        usuario: { id: userId },
+        profesional: { id: profesionalId },
+      },
+      relations: ['usuario'],
+    });
+  }
+
+  findVisibleDocumentsForProfesionalByUser(profesionalId: number, userId: number) {
+    return this.documentoRepository.find({
+      where: {
+        usuario: { id: userId },
+        visibilidad: { id: profesionalId },
+      },
+      relations: ['usuario'],
+    });
+  }
 }

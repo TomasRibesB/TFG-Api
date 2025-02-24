@@ -30,4 +30,28 @@ export class DocumentosController {
   findAllByUser(@Req() request: RequestWithUser) {
     return this.documentosService.findByUser(request.user.id);
   }
+
+  @UseGuards(AuthGuard)
+  @Get(':userId')
+  findDocumentsFoyProfesionalByUser(
+    @Param('userId') userId: string,
+    @Req() request: RequestWithUser,
+  ) {
+    return this.documentosService.findDocumentsFoyProfesionalByUser(
+      request.user.id,
+      +userId,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Get(':userId/visible')
+  findVisibleDocumentsForProfesionalByUser(
+    @Param('userId') userId: string,
+    @Req() request: RequestWithUser,
+  ) {
+    return this.documentosService.findVisibleDocumentsForProfesionalByUser(
+      request.user.id,
+      +userId,
+    );
+  }
 }
