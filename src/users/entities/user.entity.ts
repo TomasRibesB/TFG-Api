@@ -49,6 +49,13 @@ export class User {
   @Column({ nullable: true })
   birthdate: Date;
 
+  @Column({ type: 'longblob', nullable: true, select: false })
+  image: Buffer;
+
+  @Column({ nullable: false, default: false })
+  hasImage: boolean;
+
+
   @OneToMany(() => Routine, (routine) => routine.user)
   routines?: Routine[];
 

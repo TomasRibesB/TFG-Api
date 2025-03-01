@@ -7,11 +7,17 @@ import {
   Delete,
   UseGuards,
   Req,
+  Post,
+  BadRequestException,
+  UploadedFile,
+  UseInterceptors,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/requestWithUser.interface';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { NotFoundException, Res } from '@nestjs/common';
+import { Response as ExpressResponse } from 'express';
 
 @Controller('users')
 export class UsersController {
@@ -41,16 +47,53 @@ export class UsersController {
     return this.usersService.getUsuariosByProfesional(request.user.id);
   }
 
+  @Get('image/:id')
+  async getImage(@Param('id') id: number, @Res() res: ExpressResponse) {
+    const user = await this.usersService.findOneImage(id);
+    if (!user || !user.image) {
+      throw new NotFoundException('Imagen no encontrada');
+    }
+    res.setHeader('Content-Type', 'image/jpeg');
+    res.send(user.image);
+  }
+
   @Get(':id')
   @UseGuards(AuthGuard)
   findOne(@Param('id') id: string) {
     return this.usersService.findOne(+id);
   }
 
-  @Patch(':id')
+  @Patch('email')
   @UseGuards(AuthGuard)
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(+id, updateUserDto);
+  updateEmail(@Req() request: RequestWithUser, @Body('email') email: string) {
+    return this.usersService.updateEmail(request.user.id, email);
+  }
+
+  @Patch('password')
+  @UseGuards(AuthGuard)
+  updatePassword(
+    @Req() request: RequestWithUser,
+    @Body('oldPassword') oldPassword: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    return this.usersService.updatePassword(
+      request.user.id,
+      newPassword,
+      oldPassword,
+    );
+  }
+
+  @Post('image')
+  @UseGuards(AuthGuard)
+  @UseInterceptors(FileInterceptor('image'))
+  uploadImage(
+    @Req() request: RequestWithUser,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file) {
+      throw new BadRequestException('Image is required');
+    }
+    return this.usersService.uploadImage(request.user.id, file.buffer);
   }
 
   @Delete(':id')
@@ -59,6 +102,4 @@ export class UsersController {
     console.log('id', id);
     return this.usersService.remove(+id);
   }
-
-
 }

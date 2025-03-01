@@ -1,6 +1,5 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
@@ -8,6 +7,7 @@ import * as bcryptjs from 'bcryptjs';
 import { EstadoTurno } from 'src/turnos/entities/estadosTurnos.enum';
 import { Ticket } from 'src/tickets/entities/ticket.entity';
 import { Turno } from 'src/turnos/entities/turno.entity';
+import * as sharp from 'sharp';
 
 @Injectable()
 export class UsersService {
@@ -29,13 +29,23 @@ export class UsersService {
     return await this.userRepository.findOneBy({ id });
   }
 
+  async findOneImage(id: number) {
+    return await this.userRepository.findOne({
+      where: { id },
+      select: ['image'],
+    });
+  }
+
   async findOneByEmail(email: string) {
     return await this.userRepository
       .createQueryBuilder('user')
       .addSelect('user.password')
       .where('user.email = :email', { email })
       .leftJoinAndSelect('user.userTipoProfesionales', 'userTipoProfesionales')
-      .leftJoinAndSelect('userTipoProfesionales.tipoProfesional', 'tipoProfesional')
+      .leftJoinAndSelect(
+        'userTipoProfesionales.tipoProfesional',
+        'tipoProfesional',
+      )
       .getOne();
   }
 
@@ -43,9 +53,44 @@ export class UsersService {
     return await this.userRepository.findOneBy({ dni });
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto) {
-    updateUserDto.password = await bcryptjs.hash(updateUserDto.password, 10); // Hash the password
-    return await this.userRepository.update(id, updateUserDto);
+  async updateEmail(id: number, email: string) {
+    return await this.userRepository.update(id, { email });
+  }
+
+  async updatePassword(id: number, newPassword: string, oldPassword: string) {
+    console.log('newPassword', newPassword, 'oldPassword', oldPassword);
+    const user = await this.userRepository.findOne({
+      where: { id },
+      select: ['password'],
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const isPasswordValid = await bcryptjs.compare(oldPassword, user.password);
+    if (!isPasswordValid) {
+      return null;
+    }
+
+    const password = await bcryptjs.hash(newPassword, 10);
+    return await this.userRepository.update(id, { password });
+  }
+
+  async uploadImage(id: number, image: Buffer) {
+    if (!image) {
+      return await this.userRepository.update(id, {
+        image: null,
+        hasImage: false,
+      });
+    }
+
+    // Comprimir la imagen y convertirla a JPEG con calidad 80%
+    const compressedImage = await sharp(image).jpeg({ quality: 80 }).toBuffer();
+
+    return await this.userRepository.update(id, {
+      image: compressedImage,
+      hasImage: true,
+    });
   }
 
   async remove(id: number) {

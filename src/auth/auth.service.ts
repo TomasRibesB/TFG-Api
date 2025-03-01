@@ -44,10 +44,14 @@ export class AuthService {
       email: user.email,
       role: user.role,
       id: user.id,
+      hasImage: user.hasImage,
     };
 
     if (user.userTipoProfesionales.length > 0) {
-      payload.userTipoProfesionales = user.userTipoProfesionales;
+      payload = {
+        ...payload,
+        userTipoProfesionales: user.userTipoProfesionales,
+      };
     }
 
     const token = await this.jwtService.signAsync(payload);
