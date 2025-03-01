@@ -34,6 +34,8 @@ export class UsersService {
       .createQueryBuilder('user')
       .addSelect('user.password')
       .where('user.email = :email', { email })
+      .leftJoinAndSelect('user.userTipoProfesionales', 'userTipoProfesionales')
+      .leftJoinAndSelect('userTipoProfesionales.tipoProfesional', 'tipoProfesional')
       .getOne();
   }
 
