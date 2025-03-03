@@ -1,5 +1,6 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { EjerciciosService } from './ejercicios.service';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 
 @Controller('ejercicios')
 export class EjerciciosController {
@@ -10,9 +11,14 @@ export class EjerciciosController {
     return this.ejerciciosService.create(createEjercicioDto);
   }*/
 
+  @UseGuards(AuthGuard)
   @Get()
-  findAll() {
-    return this.ejerciciosService.findAll();
+  findAll(
+    @Query('search') search: string,
+    @Query('categoria') categoria: string,
+    @Query('grupoMuscular') grupoMuscular: string,
+  ) {
+    return this.ejerciciosService.findAll(search, categoria, grupoMuscular);
   }
 
   @Get(':id')

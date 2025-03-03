@@ -217,4 +217,13 @@ export class UsersService {
       ...recordatoriosTickets,
     ];
   }
+
+  async getUserByProfesional(profesionalId: number, userId: number) {
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.profesionales', 'profesional')
+      .where('user.id = :userId', { userId })
+      .andWhere('profesional.id = :profesionalId', { profesionalId })
+      .getOne();
+  }
 }

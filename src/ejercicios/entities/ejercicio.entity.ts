@@ -44,7 +44,7 @@ export class Ejercicio {
     (categoriaEjercicio) => categoriaEjercicio.ejercicios,
   )
   @JoinTable()
-  categoriaEjercicio: CategoriaEjercicio;
+  categoriaEjercicio: CategoriaEjercicio[];
 
   // This is a many-to-one relationship with the GruposMusculares entity
   @ManyToMany(

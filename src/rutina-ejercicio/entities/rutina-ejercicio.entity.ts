@@ -32,4 +32,7 @@ export class RutinaEjercicio {
     @Column({ type: 'varchar', nullable: true })
     medicion: string;
 
+    @Column({ type: 'timestamp', nullable: true })
+    fechaBaja: Date;
+
 }

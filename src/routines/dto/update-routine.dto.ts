@@ -20,6 +20,10 @@ export class UpdateRoutineDto {
     @MaxLength(300)
     description?: string;
 
+    @IsNumber()
+    @IsNotEmpty()
+    userId: number;
+
     @IsOptional()
     ejercicios?: Ejercicio[];
 

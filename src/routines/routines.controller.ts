@@ -3,9 +3,8 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
-  Delete,
+  Patch,
   UseGuards,
   Req,
 } from '@nestjs/common';
@@ -21,8 +20,20 @@ export class RoutinesController {
 
   @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createRoutineDto: CreateRoutineDto) {
-    return this.routinesService.create(createRoutineDto);
+  create(
+    @Req() request: RequestWithUser,
+    @Body() createRoutineDto: CreateRoutineDto,
+  ) {
+    return this.routinesService.create(createRoutineDto, request.user.id);
+  }
+
+  @UseGuards(AuthGuard)
+  @Patch()
+  update(
+    @Req() request: RequestWithUser,
+    @Body() updateRoutineDto: UpdateRoutineDto,
+  ) {
+    return this.routinesService.update(updateRoutineDto, request.user.id);
   }
 
   @UseGuards(AuthGuard)
