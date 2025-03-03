@@ -9,5 +9,6 @@ import { CategoriaEjercicio } from './entities/categoria-ejercicio.entity';
   imports: [TypeOrmModule.forFeature([Ejercicio, CategoriaEjercicio])],
   controllers: [CategoriaEjerciciosController],
   providers: [CategoriaEjerciciosService],
+  exports: [CategoriaEjerciciosService],
 })
 export class CategoriaEjerciciosModule {}

@@ -12,6 +12,12 @@ export class EjerciciosController {
   }*/
 
   @UseGuards(AuthGuard)
+  @Get('relations')
+  findRelations() {
+    return this.ejerciciosService.findCategoriasAndGruposMusculares();
+  }
+
+  @UseGuards(AuthGuard)
   @Get()
   findAll(
     @Query('search') search: string,
@@ -21,6 +27,7 @@ export class EjerciciosController {
     return this.ejerciciosService.findAll(search, categoria, grupoMuscular);
   }
 
+  @UseGuards(AuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.ejerciciosService.findOne(+id);

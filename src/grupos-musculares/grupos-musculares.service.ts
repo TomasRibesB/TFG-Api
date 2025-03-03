@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { CreateGruposMusculareDto } from './dto/create-grupos-musculare.dto';
-import { UpdateGruposMusculareDto } from './dto/update-grupos-musculare.dto';
+//import { CreateGruposMusculareDto } from './dto/create-grupos-musculare.dto';
+//import { UpdateGruposMusculareDto } from './dto/update-grupos-musculare.dto';
 import { GruposMusculares } from './entities/grupos-musculare.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -23,12 +23,4 @@ export class GruposMuscularesService {
   async findOne(id: number) {
     return this.gruposMuscularesRepository.findOne({ where: { id } });
   }
-
-  /*update(id: number, updateGruposMusculareDto: UpdateGruposMusculareDto) {
-    return `This action updates a #${id} GruposMusculares`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} GruposMusculares`;
-  }*/
 }
