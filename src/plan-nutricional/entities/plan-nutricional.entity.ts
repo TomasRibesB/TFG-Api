@@ -20,9 +20,6 @@ export class PlanNutricional {
   descripcion: string;
 
   @Column({ nullable: false })
-  nutricionistaId: number;
-
-  @Column({ nullable: false })
   pacienteId: number;
 
   @Column({ type: 'text', nullable: false })

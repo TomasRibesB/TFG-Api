@@ -3,11 +3,11 @@ import {
   Get,
   Post,
   Body,
-  Patch,
   Param,
   Delete,
   UseGuards,
   Req,
+  Put,
 } from '@nestjs/common';
 import { PlanNutricionalService } from './plan-nutricional.service';
 import { CreatePlanNutricionalDto } from './dto/create-plan-nutricional.dto';
@@ -23,8 +23,26 @@ export class PlanNutricionalController {
 
   @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createPlanNutricionalDto: CreatePlanNutricionalDto) {
-    return this.planNutricionalService.create(createPlanNutricionalDto);
+  create(
+    @Req() request: RequestWithUser,
+    @Body() createPlanNutricionalDto: CreatePlanNutricionalDto,
+  ) {
+    return this.planNutricionalService.create(
+      createPlanNutricionalDto,
+      request.user.id,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Put()
+  update(
+    @Req() request: RequestWithUser,
+    @Body() updatePlanNutricionalDto: UpdatePlanNutricionalDto,
+  ) {
+    return this.planNutricionalService.update(
+      updatePlanNutricionalDto,
+      request.user.id,
+    );
   }
 
   @UseGuards(AuthGuard)
@@ -35,20 +53,14 @@ export class PlanNutricionalController {
 
   @UseGuards(AuthGuard)
   @Get(':id')
-  findForNutricionistByUser(@Req() request: RequestWithUser, @Param('id') id: string) {
+  findForNutricionistByUser(
+    @Req() request: RequestWithUser,
+    @Param('id') id: string,
+  ) {
     return this.planNutricionalService.findForNutricionistByUser(
       request.user.id,
       +id,
     );
-  }
-
-  @UseGuards(AuthGuard)
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updatePlanNutricionalDto: UpdatePlanNutricionalDto,
-  ) {
-    return this.planNutricionalService.update(+id, updatePlanNutricionalDto);
   }
 
   @UseGuards(AuthGuard)

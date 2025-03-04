@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePlanNutricionalDto } from './dto/create-plan-nutricional.dto';
 import { UpdatePlanNutricionalDto } from './dto/update-plan-nutricional.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { PlanNutricional } from './entities/plan-nutricional.entity';
+
 @Injectable()
 export class PlanNutricionalService {
   constructor(
@@ -11,9 +12,36 @@ export class PlanNutricionalService {
     private planNutricionalRepository: Repository<PlanNutricional>,
   ) {}
 
-  create(createPlanNutricionalDto: CreatePlanNutricionalDto) {
-    console.log(createPlanNutricionalDto);
-    return 'This action adds a new planNutricional';
+  async create(
+    createPlanNutricionalDto: CreatePlanNutricionalDto,
+    nutricionistaId: number,
+  ): Promise<PlanNutricional> {
+    const plan = this.planNutricionalRepository.create(
+      createPlanNutricionalDto,
+    );
+    plan.nutricionista = { id: nutricionistaId } as any;
+    return await this.planNutricionalRepository.save(plan);
+  }
+
+  async update(
+    updatePlanNutricionalDto: UpdatePlanNutricionalDto,
+    nutricinistaId: number,
+  ): Promise<PlanNutricional> {
+    try {
+      const plan = await this.planNutricionalRepository.findOne({
+        where: { id: updatePlanNutricionalDto.id },
+      });
+      if (!plan) {
+        throw new NotFoundException(
+          `Plan Nutricional con id ${updatePlanNutricionalDto.id} no encontrado`,
+        );
+      }
+      const planActualizado = Object.assign(plan, updatePlanNutricionalDto);
+      planActualizado.nutricionista = { id: nutricinistaId } as any;
+      return await this.planNutricionalRepository.save(planActualizado);
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   findByUser(id: number) {
@@ -23,7 +51,10 @@ export class PlanNutricionalService {
     });
   }
 
-  findForNutricionistByUser(nutricionistId: number, userId: number) {
+  async findForNutricionistByUser(
+    nutricionistId: number,
+    userId: number,
+  ): Promise<PlanNutricional[]> {
     return this.planNutricionalRepository.find({
       where: {
         nutricionista: { id: nutricionistId },
@@ -32,16 +63,19 @@ export class PlanNutricionalService {
     });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} planNutricional`;
+  async findOne(id: number): Promise<PlanNutricional> {
+    const plan = await this.planNutricionalRepository.findOne({
+      where: { id },
+    });
+    if (!plan) {
+      throw new NotFoundException(
+        `Plan Nutricional con id ${id} no encontrado`,
+      );
+    }
+    return plan;
   }
 
-  update(id: number, updatePlanNutricionalDto: UpdatePlanNutricionalDto) {
-    console.log(updatePlanNutricionalDto);
-    return `This action updates a #${id} planNutricional`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} planNutricional`;
+  async remove(id: number): Promise<void> {
+    await this.planNutricionalRepository.delete(id);
   }
 }
