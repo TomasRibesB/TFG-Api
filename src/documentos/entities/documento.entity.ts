@@ -23,11 +23,8 @@ export class Documento {
   @Column({ nullable: false })
   descripcion: string;
 
-  @Column({ nullable: true })
-  archivo: string | null;
-
-  @Column({ nullable: true })
-  directorio: string | null;
+  @Column({ type: 'longblob', nullable: true, select: false })
+  archivo?: Buffer;
 
   @Column({
     type: 'timestamp',

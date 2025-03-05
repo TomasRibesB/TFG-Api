@@ -1,19 +1,24 @@
+// src/documentos/documentos.controller.ts
 import {
   Controller,
   Get,
   Post,
+  Put,
   Body,
-  Patch,
   Param,
-  Delete,
   UseGuards,
   Req,
+  UseInterceptors,
+  Res,
+  UploadedFile,
 } from '@nestjs/common';
 import { DocumentosService } from './documentos.service';
 import { CreateDocumentoDto } from './dto/create-documento.dto';
+import { UpdateDocumentoDto } from './dto/update-documento.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/requestWithUser.interface';
-//import { UpdateDocumentoDto } from './dto/update-documento.dto';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { Response as ExpressResponse } from 'express';
 
 @Controller('documentos')
 export class DocumentosController {
@@ -21,13 +26,41 @@ export class DocumentosController {
 
   @UseGuards(AuthGuard)
   @Post()
-  create(@Body() createDocumentoDto: CreateDocumentoDto) {
+  @UseInterceptors(FileInterceptor('archivo'))
+  create(
+    @Req() request: RequestWithUser,
+    @Body() createDocumentoDto: CreateDocumentoDto,
+  ) {
+    // Se asigna el usuario logueado al documento si es necesario
+    createDocumentoDto.profesionalId = request.user.id;
     return this.documentosService.create(createDocumentoDto);
   }
 
   @UseGuards(AuthGuard)
+  @Put()
+  update(
+    @Req() request: RequestWithUser,
+    @Body() updateDocumentoDto: UpdateDocumentoDto,
+  ) {
+    // Se asigna el usuario logueado al documento si es necesario
+    updateDocumentoDto.profesionalId = request.user.id;
+    return this.documentosService.update(updateDocumentoDto);
+  }
+
+  @UseGuards(AuthGuard)
+  @Put('archivo/:id')
+  @UseInterceptors(FileInterceptor('archivo'))
+  uploadDocumentoArchivo(
+    @Param('id') id: string,
+    @UploadedFile() archivo: Express.Multer.File,
+    //@Req() request: RequestWithUser,
+  ) {
+    return this.documentosService.uploadDocumentoArchivo(+id, archivo.buffer);
+  }
+
+  @UseGuards(AuthGuard)
   @Get()
-  findAllByUser(@Req() request: RequestWithUser) {
+  findByUser(@Req() request: RequestWithUser) {
     return this.documentosService.findByUser(request.user.id);
   }
 
@@ -53,5 +86,45 @@ export class DocumentosController {
       request.user.id,
       +userId,
     );
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('archivo/:id')
+  async download(@Param('id') id: string, @Res() res: ExpressResponse) {
+    const documento = await this.documentosService.findOneWithArchivo(+id);
+    if (!documento || !documento.archivo) {
+      return res.status(404).send('Archivo no encontrado');
+    }
+
+    const archivo = documento.archivo;
+    const headerUtf8 = archivo.slice(0, 4).toString('utf8');
+    const headerHex = archivo.slice(0, 4).toString('hex');
+
+    let contentType: string;
+    let extension: string;
+
+    if (headerUtf8 === '%PDF') {
+      contentType = 'application/pdf';
+      extension = 'pdf';
+    } else if (headerHex === '89504e47') {
+      // PNG: 89 50 4E 47
+      contentType = 'image/png';
+      extension = 'png';
+    } else if (archivo[0] === 0xff && archivo[1] === 0xd8) {
+      // JPEG: FF D8
+      contentType = 'image/jpeg';
+      extension = 'jpeg';
+    } else {
+      // Valor por defecto en caso de no reconocer el tipo
+      contentType = 'application/octet-stream';
+      extension = 'bin';
+    }
+
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${documento.titulo}.${extension}"`,
+    );
+    res.setHeader('Content-Type', contentType);
+    res.send(archivo);
   }
 }
