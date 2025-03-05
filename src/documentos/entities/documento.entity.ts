@@ -33,6 +33,9 @@ export class Documento {
   })
   fechaSubida: Date;
 
+  @Column({ type: 'timestamp', nullable: true })
+  fechaBaja: Date | null;
+
   @Column({ length: 50, nullable: true })
   nombreProfesional: string | null; //por si el profesional no esta registrado en la base de datos
 
@@ -45,7 +48,11 @@ export class Documento {
   @Column({ length: 50, nullable: true })
   emailProfesional: string | null; //por si el profesional no esta registrado en la base de datos
 
-  @ManyToOne(() => TipoProfesional, (tipoProfesional) => tipoProfesional.documentos, { eager: true })
+  @ManyToOne(
+    () => TipoProfesional,
+    (tipoProfesional) => tipoProfesional.documentos,
+    { eager: true },
+  )
   tipoProfesional: TipoProfesional | null; //por si el profesional no esta registrado en la base de datos
 
   @ManyToOne(() => User, (user) => user.documentos)

@@ -58,6 +58,7 @@ export class RoutinesService {
       .leftJoinAndSelect('rutinaEjercicio.ejercicio', 'ejercicio')
       .leftJoinAndSelect('routine.trainer', 'trainer')
       .where('routine.user.id = :id', { id })
+      .andWhere('routine.fechaBaja IS NULL')
       .getMany();
   }
 
@@ -196,8 +197,17 @@ export class RoutinesService {
     }
   }
 
-  async remove(id: number) {
-    return this.routeRepository.delete(id);
+  async remove(id: number, trainerId: number) {
+    //le pongo fecha de baja a la rutina
+    const routine = await this.routeRepository.findOne({
+      where: { id, trainer: { id: trainerId } },
+    });
+    if (!routine) {
+      throw new Error(`Rutina con id ${id} no encontrada`);
+    }
+    routine.fechaBaja = new Date();
+
+    return this.routeRepository.save(routine);
   }
 
   async removeExercise(routineId: number, exerciseId: number) {

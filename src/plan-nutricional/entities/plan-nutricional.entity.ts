@@ -13,6 +13,9 @@ export class PlanNutricional {
   })
   fechaCreacion: Date;
 
+  @Column({ type: 'timestamp', nullable: true })
+  fechaBaja: Date | null;
+
   @Column({ length: 100, nullable: false })
   nombre: string;
 

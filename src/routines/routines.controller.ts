@@ -7,6 +7,7 @@ import {
   Patch,
   UseGuards,
   Req,
+  Delete,
 } from '@nestjs/common';
 import { RoutinesService } from './routines.service';
 import { CreateRoutineDto } from './dto/create-routine.dto';
@@ -34,6 +35,12 @@ export class RoutinesController {
     @Body() updateRoutineDto: UpdateRoutineDto,
   ) {
     return this.routinesService.update(updateRoutineDto, request.user.id);
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete(':id')
+  remove(@Req() request: RequestWithUser, @Param('id') id: string) {
+    return this.routinesService.remove(+id, request.user.id);
   }
 
   @UseGuards(AuthGuard)

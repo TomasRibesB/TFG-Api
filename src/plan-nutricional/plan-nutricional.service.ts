@@ -44,9 +44,23 @@ export class PlanNutricionalService {
     }
   }
 
+  async remove(id: number, nutricionistaId: number): Promise<void> {
+    //le pongo fecha de baja, primero hago un find para ver si existe y el nutricionista es el mismo
+    const plan = await this.planNutricionalRepository.findOne({
+      where: { id, nutricionista: { id: nutricionistaId } },
+    });
+    if (!plan) {
+      throw new NotFoundException(
+        `Plan Nutricional con id ${id} no encontrado o no pertenece al nutricionista`,
+      );
+    }
+    plan.fechaBaja = new Date();
+    await this.planNutricionalRepository.save(plan);
+  }
+
   findByUser(id: number) {
     return this.planNutricionalRepository.find({
-      where: { paciente: { id } },
+      where: { paciente: { id }, fechaBaja: null },
       relations: ['nutricionista'],
     });
   }
@@ -73,9 +87,5 @@ export class PlanNutricionalService {
       );
     }
     return plan;
-  }
-
-  async remove(id: number): Promise<void> {
-    await this.planNutricionalRepository.delete(id);
   }
 }

@@ -11,6 +11,7 @@ import {
   UseInterceptors,
   Res,
   UploadedFile,
+  Delete,
 } from '@nestjs/common';
 import { DocumentosService } from './documentos.service';
 import { CreateDocumentoDto } from './dto/create-documento.dto';
@@ -56,6 +57,14 @@ export class DocumentosController {
     //@Req() request: RequestWithUser,
   ) {
     return this.documentosService.uploadDocumentoArchivo(+id, archivo.buffer);
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete(':id')
+  remove(
+    @Req() request: RequestWithUser,
+    @Param('id') id: string) {
+    return this.documentosService.remove(+id, request.user.id);
   }
 
   @UseGuards(AuthGuard)

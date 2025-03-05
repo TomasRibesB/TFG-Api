@@ -38,4 +38,7 @@ export class Routine {
     nullable: false,
   })
   createdAt: Date;
+
+  @Column({ type: 'timestamp', nullable: true })
+  fechaBaja: Date | null;
 }

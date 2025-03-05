@@ -17,10 +17,9 @@ export class DocumentosService {
     private tipoProfesionalRepository: Repository<TipoProfesional>,
   ) {}
 
-  async create(
-    createDocumentoDto: CreateDocumentoDto,
-  ): Promise<Documento> {
-    const documento : Partial<Documento> = this.documentoRepository.create(createDocumentoDto);
+  async create(createDocumentoDto: CreateDocumentoDto): Promise<Documento> {
+    const documento: Partial<Documento> =
+      this.documentoRepository.create(createDocumentoDto);
     if (createDocumentoDto.tipoProfesionalId) {
       const tipoProfesional = await this.tipoProfesionalRepository.findOne({
         where: { id: createDocumentoDto.tipoProfesionalId },
@@ -78,9 +77,22 @@ export class DocumentosService {
     return await this.documentoRepository.save(documento);
   }
 
+  async remove(id: number, profesionalId: number) {
+    //le doy fecha de baja al documento
+    const documento = await this.documentoRepository.findOne({
+      where: { id, profesional: { id: profesionalId } },
+    });
+    if (!documento) {
+      throw new Error(`Documento con id ${id} no encontrado`);
+    }
+
+    documento.fechaBaja = new Date();
+    return await this.documentoRepository.save(documento);
+  }
+
   findByUser(id: number) {
     return this.documentoRepository.find({
-      where: { usuario: { id } },
+      where: { usuario: { id }, fechaBaja: null },
       relations: ['profesional'],
     });
   }
@@ -104,6 +116,7 @@ export class DocumentosService {
       where: {
         usuario: { id: userId },
         visibilidad: { id: profesionalId },
+        fechaBaja: null,
       },
       relations: ['usuario'],
     });

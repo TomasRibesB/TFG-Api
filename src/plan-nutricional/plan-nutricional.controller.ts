@@ -65,7 +65,7 @@ export class PlanNutricionalController {
 
   @UseGuards(AuthGuard)
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.planNutricionalService.remove(+id);
+  remove(@Req() request: RequestWithUser, @Param('id') id: string) {
+    return this.planNutricionalService.remove(+id, request.user.id);
   }
 }
