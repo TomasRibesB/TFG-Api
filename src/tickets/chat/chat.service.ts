@@ -26,16 +26,12 @@ export class ChatService {
   // Método para guardar el mensaje en la BD
   async saveMessage(data: any): Promise<TicketMensaje> {
     // data = { idRef, ticket: {id}, fecha, emisor: {id}, estado, mensaje }
-
-    // Opcional: verificar que el ticket existe
     const ticket = await this.ticketRepository.findOne({
       where: { id: data.ticket.id },
     });
     if (!ticket) {
       throw new Error(`Ticket con id=${data.ticket.id} no encontrado`);
     }
-
-    // Construir la instancia de TicketMensaje
     const nuevoMensaje = this.ticketMensajeRepository.create({
       idRef: data.idRef,
       ticket: { id: ticket.id },
@@ -44,8 +40,13 @@ export class ChatService {
       estado: data.estado,
       mensaje: data.mensaje,
     });
-
-    // Guardar el mensaje
-    return await this.ticketMensajeRepository.save(nuevoMensaje);
+    const savedMensaje = await this.ticketMensajeRepository.save(nuevoMensaje);
+    // Vuelve a consultar para cargar la relación "emisor" completa (firstName, lastName, etc.)
+    return this.ticketMensajeRepository
+      .createQueryBuilder('mensaje')
+      .leftJoin('mensaje.emisor', 'emisor')
+      .addSelect(['emisor.id', 'emisor.firstName', 'emisor.lastName'])
+      .where('mensaje.id = :id', { id: savedMensaje.id })
+      .getOne();
   }
 }

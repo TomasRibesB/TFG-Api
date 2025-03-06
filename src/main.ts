@@ -9,12 +9,13 @@ if (process.env.NODE_ENV === 'production') {
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ValidationPipe } from '@nestjs/common';
+import { SocketIoAdapter } from './adapters/socket-io.adapter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Configuración global HTTP
   app.setGlobalPrefix('/api/v1');
-
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -25,20 +26,26 @@ async function bootstrap() {
 
   app.enableCors({
     origin: '*',
-    methods: 'GET,POST,PATCH, PUT,DELETE',
+    methods: 'GET,POST,PATCH,PUT,DELETE',
     credentials: true,
   });
 
-  const port = process.env.PORT || 3000; // Utiliza el puerto definido en la variable de entorno PORT o el puerto 3000 por defecto
+  // Usa el adaptador personalizado para WebSockets (Socket.io)
+  app.useWebSocketAdapter(new SocketIoAdapter(app));
+
+  const port = process.env.PORT || 3000;
   await app.listen(port);
 
   const server = app.getHttpServer();
   const addressInfo = server.address();
 
   if (typeof addressInfo === 'string') {
-    console.log(`Application is listening on ${addressInfo}`);
-  } else {
-    console.log(`Application is listening on http://${addressInfo.address}:${addressInfo.port}`);
+    console.log(`La aplicación está escuchando en ${addressInfo}`);
+  } else if (addressInfo) {
+    console.log(
+      `La aplicación está escuchando en http://${addressInfo.address}:${addressInfo.port}`,
+    );
   }
 }
+
 bootstrap();

@@ -5,7 +5,11 @@ import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { jwtContants } from 'src/auth/constants/jwt.constant';
 
-@WebSocketGateway()
+@WebSocketGateway({
+  cors: {
+    origin: '*',
+  },
+})
 export class ChatGateway implements OnModuleInit {
   @WebSocketServer()
   public server: Server;
@@ -39,22 +43,22 @@ export class ChatGateway implements OnModuleInit {
         return socket.disconnect();
       }
 
-      socket.on('joinChat', async (ticketId: string) => {
-        console.log('Joining chat', ticketId);
-        // Obtener el ticket de la base de datos (asegúrate de implementarlo en ChatService)
-        const ticket = await this.chatService.getTicket(ticketId);
+      socket.on('joinChat', async (ticketId: number) => {
+        const room = String(ticketId); // Conversión a string
+        console.log('Joining chat', room);
+        // Obtener el ticket desde la BD (asegúrate de que getTicket reciba un string o un número)
+        const ticket = await this.chatService.getTicket(room);
         const userId = socket.data.user.id;
 
-        // Validar que el usuario sea solicitante, receptor o usuario del ticket
         if (
           ticket.solicitante.id === userId ||
           ticket.receptor.id === userId ||
           ticket.usuario.id === userId
         ) {
-          socket.join(ticketId);
-          console.log(`Socket ${socket.id} joined chat ${ticketId}`);
+          socket.join(room);
+          console.log(`Socket ${socket.id} joined chat ${room}`);
         } else {
-          console.error(`User ${userId} not authorized for chat ${ticketId}`);
+          console.error(`User ${userId} not authorized for chat ${room}`);
           socket.emit('unauthorized', {
             message: 'No tienes permisos para este chat',
           });
@@ -72,6 +76,7 @@ export class ChatGateway implements OnModuleInit {
           // 2. Reemitir el mensaje guardado (ahora con ID de la DB, etc.)
           //    Nota: data.ticketId debe ser data.ticket.id o similar
           const ticketId = data.ticket?.id;
+          console.log('Emitting message to room', ticketId, savedMessage);
           this.server.to(String(ticketId)).emit('message', savedMessage);
         } catch (error) {
           console.error('Error al guardar mensaje:', error);
