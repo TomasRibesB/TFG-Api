@@ -14,8 +14,8 @@ export class TicketsService {
     private ticketRepository: Repository<Ticket>,
   ) {}
 
-  findTicketsByUser(id: number) {
-    return this.ticketRepository.find({
+  async findTicketsByUser(id: number) {
+    const tickets = await this.ticketRepository.find({
       where: [
         { usuario: { id } },
         { solicitante: { id } },
@@ -23,6 +23,7 @@ export class TicketsService {
       ],
       relations: ['receptor', 'solicitante', 'usuario'],
     });
+    return tickets;
   }
 
   async findTicketById(id: number, userId: number): Promise<Ticket> {
