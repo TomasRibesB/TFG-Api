@@ -1,5 +1,12 @@
-import { Column, Entity, PrimaryGeneratedColumn, OneToMany, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  OneToMany,
+  ManyToOne,
+} from 'typeorm';
 import { TicketMensaje } from 'src/ticket-mensajes/entities/ticket-mensaje.entity';
+import { EstadoConsentimiento } from './estadoConsentimiento.enum';
 import { User } from 'src/users/entities/user.entity';
 
 @Entity()
@@ -25,14 +32,32 @@ export class Ticket {
   @ManyToOne(() => User, (user) => user.ticketsUsuario)
   usuario: User;
 
-  @Column({ default: false })
-  isAutorizado: boolean;
+  @Column({
+    type: 'enum',
+    enum: EstadoConsentimiento,
+    nullable: false,
+    default: EstadoConsentimiento.Pendiente,
+  })
+  consentimientoUsuario: EstadoConsentimiento;
 
-  @Column({ default: false })
-  isAceptado: boolean;
+  @Column({
+    type: 'enum',
+    enum: EstadoConsentimiento,
+    nullable: false,
+    default: EstadoConsentimiento.Pendiente,
+  })
+  consentimientoReceptor: EstadoConsentimiento;
 
-  @Column({ default: true })
-  isActive: boolean;
+  @Column({
+    type: 'enum',
+    enum: EstadoConsentimiento,
+    nullable: false,
+    default: EstadoConsentimiento.Aceptado,
+  })
+  consentimientoSolicitante: EstadoConsentimiento;
+
+  @Column({ type: 'timestamp', nullable: true })
+  fechaBaja: Date | null;
 
   @OneToMany(() => TicketMensaje, (mensaje) => mensaje.ticket)
   mensajes: TicketMensaje[];

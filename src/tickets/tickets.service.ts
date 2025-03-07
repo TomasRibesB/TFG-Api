@@ -4,8 +4,9 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, In } from 'typeorm';
 import { Ticket } from './entities/ticket.entity';
+import { EstadoConsentimiento } from './entities/estadoConsentimiento.enum';
 
 @Injectable()
 export class TicketsService {
@@ -17,9 +18,38 @@ export class TicketsService {
   async findTicketsByUser(id: number) {
     const tickets = await this.ticketRepository.find({
       where: [
-        { usuario: { id } },
-        { solicitante: { id } },
-        { receptor: { id } },
+        {
+          consentimientoUsuario: In([
+            EstadoConsentimiento.Aceptado,
+            EstadoConsentimiento.Pendiente,
+          ]),
+          usuario: { id },
+          fechaBaja: null,
+        },
+        {
+          consentimientoUsuario: In([
+            EstadoConsentimiento.Aceptado,
+            EstadoConsentimiento.Pendiente,
+          ]),
+          consentimientoReceptor: In([
+            EstadoConsentimiento.Aceptado,
+            EstadoConsentimiento.Pendiente,
+          ]),
+          solicitante: { id },
+          fechaBaja: null,
+        },
+        {
+          consentimientoUsuario: In([
+            EstadoConsentimiento.Aceptado,
+            EstadoConsentimiento.Pendiente,
+          ]),
+          consentimientoSolicitante: In([
+            EstadoConsentimiento.Aceptado,
+            EstadoConsentimiento.Pendiente,
+          ]),
+          receptor: { id },
+          fechaBaja: null,
+        },
       ],
       relations: ['receptor', 'solicitante', 'usuario'],
     });
@@ -45,5 +75,25 @@ export class TicketsService {
     }
 
     return ticket;
+  }
+
+  async updateTicketConsentimiento(
+    userId: number,
+    ticketId: number,
+    estadoConsentimiento: EstadoConsentimiento,
+  ) {
+    const ticket = await this.findTicketById(ticketId, userId);
+
+    if (ticket.usuario.id === userId) {
+      ticket.consentimientoUsuario = estadoConsentimiento;
+    }
+    if (ticket.receptor.id === userId) {
+      ticket.consentimientoReceptor = estadoConsentimiento;
+    }
+    if (ticket.solicitante.id === userId) {
+      ticket.consentimientoSolicitante = estadoConsentimiento;
+    }
+
+    return this.ticketRepository.save(ticket);
   }
 }

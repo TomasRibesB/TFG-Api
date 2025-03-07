@@ -8,6 +8,7 @@ import { EstadoTurno } from 'src/turnos/entities/estadosTurnos.enum';
 import { Ticket } from 'src/tickets/entities/ticket.entity';
 import { Turno } from 'src/turnos/entities/turno.entity';
 import * as sharp from 'sharp';
+import { EstadoConsentimiento } from 'src/tickets/entities/estadoConsentimiento.enum';
 
 @Injectable()
 export class UsersService {
@@ -163,14 +164,35 @@ export class UsersService {
       .andWhere('turno.estado = :estado', { estado: EstadoTurno.Pendiente })
       .getMany();
 
-    // Consulta para tickets pendientes (tomamos como pendientes aquellos no aceptados)
+    // Consulta para tickets pendientes (tomamos como pendientes aquellos no donde el concentimiento de alguno de los usuarios sea Pendiente)
     const ticketsPendientes = await this.userRepository.manager
       .getRepository(Ticket)
       .createQueryBuilder('ticket')
       .leftJoinAndSelect('ticket.receptor', 'receptor')
       .leftJoinAndSelect('ticket.solicitante', 'solicitante')
       .where('ticket.receptor = :id', { id })
-      .andWhere('ticket.isAceptado = :aceptado', { aceptado: false })
+      .andWhere(
+        'ticket.consentimientoReceptor = :aceptado OR ticket.consentimientoReceptor = :pendiente',
+        {
+          aceptado: EstadoConsentimiento.Aceptado,
+          pendiente: EstadoConsentimiento.Pendiente,
+        },
+      )
+      .andWhere(
+        'ticket.consentimientoSolicitante = :aceptado OR ticket.consentimientoSolicitante = :pendiente',
+        {
+          aceptado: EstadoConsentimiento.Aceptado,
+          pendiente: EstadoConsentimiento.Pendiente,
+        },
+      )
+      .andWhere(
+        'ticket.consentimientoUsuario = :aceptado OR ticket.consentimientoUsuario = :pendiente',
+        {
+          aceptado: EstadoConsentimiento.Aceptado,
+          pendiente: EstadoConsentimiento.Pendiente,
+        },
+      )
+      .andWhere('ticket.fechaBaja IS NULL')
       .getMany();
 
     const calcularTiempoRestante = (fecha: Date) => {
@@ -224,6 +246,42 @@ export class UsersService {
       .leftJoinAndSelect('user.profesionales', 'profesional')
       .where('user.id = :userId', { userId })
       .andWhere('profesional.id = :profesionalId', { profesionalId })
+      .getOne();
+  }
+
+  async getUserByDNIForProfesional(profesionalId: number, dni: string) {
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .select(['user.dni', 'user.firstName', 'user.lastName'])
+      .where('user.dni = :dni', { dni })
+      .getOne();
+  }
+
+  async getProfesionalsByUserForTicketsCreation(
+    userId: number,
+    profesionalId: number,
+  ) {
+    console.log('userId', userId, 'profesionalId', profesionalId);
+    const user = await this.getUserByProfesional(profesionalId, userId);
+    if (!user) {
+      throw new NotFoundException('Profesional no encontrado');
+    }
+
+    return await this.userRepository
+      .createQueryBuilder('user')
+      .select(['user.id', 'user.firstName', 'user.lastName'])
+      .leftJoin('user.profesionales', 'profesional')
+      .leftJoin('profesional.userTipoProfesionales', 'userTipoProfesional')
+      .leftJoinAndSelect(
+        'userTipoProfesional.tipoProfesional',
+        'tipoProfesional',
+      )
+      .addSelect([
+        'profesional.id',
+        'profesional.firstName',
+        'profesional.lastName',
+      ])
+      .where('user.id = :userId', { userId })
       .getOne();
   }
 }

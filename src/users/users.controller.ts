@@ -35,10 +35,31 @@ export class UsersController {
     return this.usersService.getRecordatoriosByProfesional(request.user.id);
   }
 
+  @Get('profesionales/tickets/:userId')
+  @UseGuards(AuthGuard)
+  getProfesionalsByUserForTicketsCreation(
+    @Req() request: RequestWithUser,
+    @Param('userId') userId: number,
+  ) {
+    return this.usersService.getProfesionalsByUserForTicketsCreation(
+      userId,
+      request.user.id,
+    );
+  }
+
   @Get('profesionales')
   @UseGuards(AuthGuard)
   getProfesionalesByUser(@Req() request: RequestWithUser) {
     return this.usersService.getProfesionalesByUser(request.user.id);
+  }
+
+  @Get('profesionales/:dni')
+  @UseGuards(AuthGuard)
+  getUserDNIByProfesional(
+    @Req() request: RequestWithUser,
+    @Param('dni') dni: string,
+  ) {
+    return this.usersService.getUserByDNIForProfesional(request.user.id, dni);
   }
 
   @Get('clientes')
