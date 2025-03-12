@@ -9,6 +9,7 @@ import { Ticket } from 'src/tickets/entities/ticket.entity';
 import { Turno } from 'src/turnos/entities/turno.entity';
 import * as sharp from 'sharp';
 import { EstadoConsentimiento } from 'src/tickets/entities/estadoConsentimiento.enum';
+import { Role } from './entities/role.enum';
 
 @Injectable()
 export class UsersService {
@@ -250,10 +251,19 @@ export class UsersService {
   }
 
   async getUserByDNIForProfesional(profesionalId: number, dni: string) {
+    if (!dni) throw new NotFoundException('DNI no encontrado');
     return await this.userRepository
       .createQueryBuilder('user')
-      .select(['user.dni', 'user.firstName', 'user.lastName'])
+      .select([
+        'user.id',
+        'user.dni',
+        'user.firstName',
+        'user.lastName',
+        'user.hasImage',
+      ])
       .where('user.dni = :dni', { dni })
+      .andWhere('user.id != :profesionalId', { profesionalId })
+      .andWhere('user.role = :role', { role: Role.Usuario })
       .getOne();
   }
 
