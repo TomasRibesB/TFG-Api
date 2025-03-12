@@ -6,11 +6,13 @@ import {
   Req,
   UseGuards,
   Put,
+  Post,
 } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/requestWithUser.interface';
 import { EstadoConsentimiento } from './entities/estadoConsentimiento.enum';
+import { CreateTicketDto } from './dto/create-ticket.dto';
 
 @Controller('tickets')
 export class TicketsController {
@@ -43,5 +45,11 @@ export class TicketsController {
       ticketId,
       estadoConsentimiento,
     );
+  }
+
+  @UseGuards(AuthGuard)
+  @Post()
+  create(@Req() request: RequestWithUser, @Body('ticket') createTicketDto: CreateTicketDto) {
+    return this.ticketsService.createTicket(request.user.id, createTicketDto);
   }
 }

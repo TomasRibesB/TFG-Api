@@ -38,6 +38,17 @@ export class UsersService {
     });
   }
 
+  async veifyUserIsProfesional(id: number) {
+    return (await this.userRepository.findOne({
+      where: {
+        id,
+        role: Role.Profesional || Role.Nutricionista || Role.Entrenador,
+      },
+    }))
+      ? true
+      : false;
+  }
+
   async findOneByEmail(email: string) {
     return await this.userRepository
       .createQueryBuilder('user')
@@ -294,5 +305,24 @@ export class UsersService {
       .where('user.id = :userId', { userId })
       .andWhere('profesional.id != :profesionalId', { profesionalId })
       .getOne();
+  }
+
+  async asignarUsuarioAProfesional(profesionalId: number, userId: number) {
+    if (!(await this.veifyUserIsProfesional(profesionalId)))
+      throw new NotFoundException('El profesional no existe');
+    if (await this.veifyUserIsProfesional(userId))
+      throw new NotFoundException('El usuario es un profesional');
+
+    const profesional = await this.userRepository.findOne({
+      where: { id: profesionalId },
+      relations: ['usuarios'],
+    });
+    if (!profesional) throw new NotFoundException('El profesional no existe');
+
+    const usuario = await this.userRepository.findOneBy({ id: userId });
+    if (!usuario) throw new NotFoundException('El usuario no existe');
+
+    profesional.usuarios = [...(profesional.usuarios || []), usuario];
+    return await this.userRepository.save(profesional);
   }
 }
