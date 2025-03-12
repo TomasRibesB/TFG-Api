@@ -282,6 +282,7 @@ export class UsersService {
         'profesional.lastName',
       ])
       .where('user.id = :userId', { userId })
+      .andWhere('profesional.id != :profesionalId', { profesionalId })
       .getOne();
   }
 }
