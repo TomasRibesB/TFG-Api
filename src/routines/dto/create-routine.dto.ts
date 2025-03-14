@@ -6,7 +6,8 @@ import {
   IsOptional,
   IsNumber,
 } from 'class-validator';
-
+import { Ejercicio } from 'src/ejercicios/entities/ejercicio.entity';
+import { RutinaEjercicio } from 'src/rutina-ejercicio/entities/rutina-ejercicio.entity';
 export class CreateRoutineDto {
   @IsString()
   @IsNotEmpty()
@@ -22,4 +23,10 @@ export class CreateRoutineDto {
   @IsNumber()
   @IsNotEmpty()
   userId: number;
+
+  @IsOptional()
+  ejercicios?: Ejercicio[];
+
+  @IsOptional()
+  ejerciciosRegistros?: RutinaEjercicio[];
 }

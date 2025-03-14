@@ -65,16 +65,29 @@ export class DocumentosService {
   }
 
   async uploadDocumentoArchivo(id: number, archivoBuffer: Buffer) {
-    const documento = await this.documentoRepository.findOne({
-      where: { id },
-    });
-    if (!documento) {
-      throw new Error(`Documento con id ${id} no encontrado`);
+    // Procesar el buffer
+    let processedBuffer: Buffer;
+    try {
+      const metadata = await sharp(archivoBuffer).metadata();
+      if (
+        metadata.format &&
+        ['jpeg', 'png', 'webp', 'tiff'].includes(metadata.format)
+      ) {
+        processedBuffer = await sharp(archivoBuffer)
+          .jpeg({ quality: 80 })
+          .toBuffer();
+      } else {
+        processedBuffer = archivoBuffer;
+      }
+    } catch (error) {
+      // Si Sharp no puede leer los metadatos, consideramos que no es una imagen
+      processedBuffer = archivoBuffer;
+      console.error(error);
     }
-    documento.archivo = await sharp(archivoBuffer)
-      .jpeg({ quality: 80 })
-      .toBuffer();
-    return await this.documentoRepository.save(documento);
+
+    // Actualizar directamente en la base de datos evitando volver a insertar
+    await this.documentoRepository.update(id, { archivo: processedBuffer });
+    return await this.documentoRepository.findOne({ where: { id } });
   }
 
   async remove(id: number, profesionalId: number) {
