@@ -104,6 +104,18 @@ export class UsersController {
     );
   }
 
+  @Post('profesionales/asignar-usuario')
+  @UseGuards(AuthGuard)
+  asignarUsuarioAProfesional(
+    @Req() request: RequestWithUser,
+    @Body('clienteId') userId: number,
+  ) {
+    return this.usersService.asignarUsuarioAProfesional(
+      request.user.id,
+      userId,
+    );
+  }
+
   @Post('image')
   @UseGuards(AuthGuard)
   @UseInterceptors(FileInterceptor('image'))
@@ -122,14 +134,5 @@ export class UsersController {
   remove(@Param('id') id: string) {
     console.log('id', id);
     return this.usersService.remove(+id);
-  }
-
-  @Post('asignar-usuario')
-  @UseGuards(AuthGuard)
-  asignarUsuarioAProfesional(
-    @Req() request: RequestWithUser,
-    @Body('userId') userId: number,
-  ) {
-    return this.usersService.asignarUsuarioAProfesional(request.user.id, userId);
   }
 }

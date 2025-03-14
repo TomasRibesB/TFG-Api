@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import * as bcryptjs from 'bcryptjs';
 import { EstadoTurno } from 'src/turnos/entities/estadosTurnos.enum';
 import { Ticket } from 'src/tickets/entities/ticket.entity';
@@ -39,14 +39,12 @@ export class UsersService {
   }
 
   async veifyUserIsProfesional(id: number) {
-    return (await this.userRepository.findOne({
+    return !!(await this.userRepository.findOne({
       where: {
         id,
-        role: Role.Profesional || Role.Nutricionista || Role.Entrenador,
+        role: In([Role.Profesional, Role.Nutricionista, Role.Entrenador]),
       },
-    }))
-      ? true
-      : false;
+    }));
   }
 
   async findOneByEmail(email: string) {
@@ -323,6 +321,9 @@ export class UsersService {
     if (!usuario) throw new NotFoundException('El usuario no existe');
 
     profesional.usuarios = [...(profesional.usuarios || []), usuario];
-    return await this.userRepository.save(profesional);
+    const result = await this.userRepository.save(profesional);
+
+    if (!result) throw new NotFoundException('Error al asignar el usuario');
+    return await this.getUserByProfesional(profesionalId, userId);
   }
 }
