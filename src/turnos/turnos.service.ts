@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateTurnoDto } from './dto/create-turno.dto';
 import { UpdateTurnoDto } from './dto/update-turno.dto';
 import { Turno } from './entities/turno.entity';
@@ -11,7 +11,7 @@ export class TurnosService {
     @InjectRepository(Turno)
     private turnoRepository: Repository<Turno>,
   ) {}
-  findByUser(id: number) {
+  async findByUser(id: number) {
     return this.turnoRepository.find({
       where: [
         {
@@ -22,6 +22,102 @@ export class TurnosService {
         },
       ],
       relations: ['profesional', 'paciente'],
+      order: { fechaHora: 'ASC' },
+    });
+  }
+
+  async create(createTurnoDto: CreateTurnoDto, profesionalId: number) {
+    // Verificar que no exista un turno con la misma fecha y hora para este profesional
+    const turnos = await this.turnoRepository.find({
+      where: {
+        fechaHora: new Date(createTurnoDto.fechaHora),
+        profesional: { id: profesionalId },
+      },
+    });
+    console.log(turnos);
+    if (turnos.length > 0) {
+      throw new UnauthorizedException(
+        'Ya existe un turno en la misma fecha y hora',
+      );
+    }
+
+    //verifico ue el turno no sea anterior a la fecha actual
+    if (new Date(createTurnoDto.fechaHora) < new Date()) {
+      throw new UnauthorizedException(
+        'La fecha del turno es anterior a la actual',
+      );
+    }
+
+    // Construir el objeto newTurno sin esparcir el DTO directamente
+    const newTurno: Partial<Turno> = {
+      fechaHora: createTurnoDto.fechaHora,
+      profesional: { id: profesionalId } as any,
+      paciente: createTurnoDto.pacienteId
+        ? ({ id: createTurnoDto.pacienteId } as any)
+        : null,
+    };
+
+    return this.turnoRepository.save(newTurno);
+  }
+
+  async update(
+    id: number,
+    updateTurnoDto: UpdateTurnoDto,
+    profesionalId: number,
+  ) {
+    //verifico que el turno esté asignado al profesional
+    const turno = await this.turnoRepository.findOne({
+      where: { id, profesional: { id: profesionalId } },
+    });
+    if (!turno) {
+      throw new UnauthorizedException(
+        'No tiene permisos para modificar el turno',
+      );
+    }
+
+    if (updateTurnoDto.fechaHora) {
+      // Verificar que no exista un turno con la misma fecha y hora para este profesional
+      const turnos = await this.turnoRepository.find({
+        where: {
+          fechaHora: new Date(updateTurnoDto.fechaHora),
+          profesional: { id: profesionalId },
+        },
+      });
+      if (turnos.length > 0) {
+        throw new UnauthorizedException(
+          'Ya existe un turno en la misma fecha y hora',
+        );
+      }
+    }
+
+    //verifico ue el turno no sea anterior a la fecha actual
+    if (
+      updateTurnoDto.fechaHora &&
+      new Date(updateTurnoDto.fechaHora) < new Date()
+    ) {
+      throw new UnauthorizedException(
+        'La fecha del turno es anterior a la actual',
+      );
+    }
+
+    const editedTurno = { ...turno, ...updateTurnoDto };
+    editedTurno.paciente = updateTurnoDto.pacienteId
+      ? ({ id: updateTurnoDto.pacienteId } as any)
+      : null;
+
+    return this.turnoRepository.save(editedTurno);
+  }
+
+  async asignarTurnoForPaciente(id: number, pacienteId: number) {
+    return this.turnoRepository.update(id, { paciente: { id: pacienteId } });
+  }
+
+  async remove(id: number, profesionalId: number) {
+    //verifico que no esté asignado a un paciente
+    return this.turnoRepository.delete({
+      id,
+      paciente: null,
+      profesional: { id: profesionalId },
     });
   }
 }

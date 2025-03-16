@@ -11,11 +11,14 @@ export class Turno {
   @Column({ nullable: false, type: 'datetime' })
   fechaHora: Date;
 
-  @Column({ type: 'enum', enum: EstadoTurno, default: EstadoTurno.Pendiente })
+  @Column({ type: 'enum', enum: EstadoTurno, default: EstadoTurno.Libre })
   estado: EstadoTurno;
 
   @Column({ nullable: true })
-  notificado: Date | null;
+  notificadoPaciente: Date | null;
+
+  @Column({ nullable: true })
+  notificadoProfesional: Date | null;
 
   @ManyToOne(() => User, (user) => user.turnosPaciente)
   paciente: User;

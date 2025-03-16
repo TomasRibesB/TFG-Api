@@ -44,7 +44,7 @@ export class PlanNutricionalService {
     }
   }
 
-  async remove(id: number, nutricionistaId: number): Promise<void> {
+  async remove(id: number, nutricionistaId: number) {
     //le pongo fecha de baja, primero hago un find para ver si existe y el nutricionista es el mismo
     const plan = await this.planNutricionalRepository.findOne({
       where: { id, nutricionista: { id: nutricionistaId } },
@@ -59,7 +59,7 @@ export class PlanNutricionalService {
     } else {
       plan.fechaBaja = new Date();
     }
-    await this.planNutricionalRepository.save(plan);
+    return this.planNutricionalRepository.save(plan);
   }
 
   findByUser(id: number) {
