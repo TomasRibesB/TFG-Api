@@ -158,6 +158,7 @@ export class UsersService {
       .leftJoinAndSelect('turno.profesional', 'profesional')
       .leftJoinAndSelect('turno.paciente', 'paciente')
       .where('turno.profesional = :id', { id })
+      .andWhere('turno.paciente IS NOT NULL')
       .andWhere('turno.fechaHora BETWEEN :inicioConsulta AND :finDelDia', {
         inicioConsulta,
         finDelDia,
@@ -171,6 +172,7 @@ export class UsersService {
       .leftJoinAndSelect('turno.profesional', 'profesional')
       .leftJoinAndSelect('turno.paciente', 'paciente')
       .where('turno.profesional = :id', { id })
+      .andWhere('turno.paciente IS NOT NULL')
       .andWhere('turno.estado = :estado', { estado: EstadoTurno.Pendiente })
       .getMany();
 

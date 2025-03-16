@@ -13,8 +13,4 @@ export class CreateTurnoDto {
   @IsOptional()
   @IsNumber()
   pacienteId?: number;
-
-  @IsNotEmpty()
-  @IsNumber()
-  profesionalId?: number;
 }

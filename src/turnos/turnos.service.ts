@@ -2,7 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateTurnoDto } from './dto/create-turno.dto';
 import { UpdateTurnoDto } from './dto/update-turno.dto';
 import { Turno } from './entities/turno.entity';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 @Injectable()
@@ -68,6 +68,7 @@ export class TurnosService {
     //verifico que el turno esté asignado al profesional
     const turno = await this.turnoRepository.findOne({
       where: { id, profesional: { id: profesionalId } },
+      relations: ['profesional', 'paciente'],
     });
     if (!turno) {
       throw new UnauthorizedException(
@@ -100,12 +101,14 @@ export class TurnosService {
       );
     }
 
-    const editedTurno = { ...turno, ...updateTurnoDto };
-    editedTurno.paciente = updateTurnoDto.pacienteId
-      ? ({ id: updateTurnoDto.pacienteId } as any)
-      : null;
+    const updatedTurno = this.turnoRepository.merge(turno, updateTurnoDto);
+    if (updateTurnoDto.pacienteId !== undefined) {
+      updatedTurno.paciente = updateTurnoDto.pacienteId
+        ? ({ id: updateTurnoDto.pacienteId } as any)
+        : null;
+    }
 
-    return this.turnoRepository.save(editedTurno);
+    return this.turnoRepository.save(updatedTurno);
   }
 
   async asignarTurnoForPaciente(id: number, pacienteId: number) {
@@ -113,10 +116,9 @@ export class TurnosService {
   }
 
   async remove(id: number, profesionalId: number) {
-    //verifico que no esté asignado a un paciente
-    return this.turnoRepository.delete({
+    return await this.turnoRepository.delete({
       id,
-      paciente: null,
+      paciente: IsNull(),
       profesional: { id: profesionalId },
     });
   }
