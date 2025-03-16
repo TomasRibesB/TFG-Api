@@ -83,7 +83,7 @@ export class RoutinesService {
       throw new Error('Error al crear la rutina');
     }
   }
-  
+
   async findByUser(id: number) {
     return this.routineRepository
       .createQueryBuilder('routine')
@@ -238,8 +238,12 @@ export class RoutinesService {
     if (!routine) {
       throw new Error(`Rutina con id ${id} no encontrada`);
     }
-    routine.fechaBaja = new Date();
 
+    if (routine.fechaBaja) {
+      routine.fechaBaja = null;
+    } else {
+      routine.fechaBaja = new Date();
+    }
     return this.routineRepository.save(routine);
   }
 

@@ -99,7 +99,11 @@ export class DocumentosService {
       throw new Error(`Documento con id ${id} no encontrado`);
     }
 
-    documento.fechaBaja = new Date();
+    if (documento.fechaBaja) {
+      documento.fechaBaja = null;
+    } else {
+      documento.fechaBaja = new Date();
+    }
     return await this.documentoRepository.save(documento);
   }
 

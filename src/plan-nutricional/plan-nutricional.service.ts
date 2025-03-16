@@ -54,7 +54,11 @@ export class PlanNutricionalService {
         `Plan Nutricional con id ${id} no encontrado o no pertenece al nutricionista`,
       );
     }
-    plan.fechaBaja = new Date();
+    if (plan.fechaBaja) {
+      plan.fechaBaja = null;
+    } else {
+      plan.fechaBaja = new Date();
+    }
     await this.planNutricionalRepository.save(plan);
   }
 
