@@ -9,6 +9,7 @@ import { RegisterDto } from './dto/register.dto';
 
 import * as bcryptjs from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
+import { RegisterProfesionalDto } from './dto/register-profesional.dto';
 
 @Injectable()
 export class AuthService {
@@ -72,6 +73,32 @@ export class AuthService {
     }
     const plainPassword = registerDto.password;
     await this.usersService.create(registerDto);
+    console.log('Usuario creado', registerDto.email, plainPassword);
+    return this.login({ email: registerDto.email, password: plainPassword });
+  }
+
+  async registerProfesional(registerDto: RegisterProfesionalDto) {
+    const user = await this.usersService.findOneByEmail(registerDto.email);
+    const userByDni = await this.usersService.findOneByDni(registerDto.dni);
+    if (user) {
+      throw new BadRequestException('El email ya está registrado');
+    }
+    if (userByDni) {
+      throw new BadRequestException('El DNI ya está registrado');
+    }
+    const plainPassword = registerDto.password;
+    const createdUser = await this.usersService.create(registerDto);
+
+    if (
+      registerDto.tipoProfesionalIds &&
+      registerDto.tipoProfesionalIds.length > 0
+    ) {
+      await this.usersService.assignTipoProfesionales(
+        createdUser.id,
+        registerDto.tipoProfesionalIds,
+      );
+    }
+
     console.log('Usuario creado', registerDto.email, plainPassword);
     return this.login({ email: registerDto.email, password: plainPassword });
   }

@@ -7,11 +7,8 @@ export class UserTipoProfesional {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ nullable: true })
-  archivo: string;
-
-  @Column({ nullable: true })
-  directorio: string;
+  @Column({ type: 'longblob', nullable: true, select: false })
+  archivo: Buffer;
 
   @Column({ nullable: true })
   certificadora: string;

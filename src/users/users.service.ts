@@ -10,12 +10,18 @@ import { Turno } from 'src/turnos/entities/turno.entity';
 import * as sharp from 'sharp';
 import { EstadoConsentimiento } from 'src/tickets/entities/estadoConsentimiento.enum';
 import { Role } from './entities/role.enum';
+import { TipoProfesional } from 'src/tipo-profesional/entities/tipo-profesional.entity';
+import { UserTipoProfesional } from 'src/tipo-profesional/entities/user-tipo-profesional.entity';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(TipoProfesional)
+    private tipoProfesionalRepository: Repository<TipoProfesional>,
+    @InjectRepository(UserTipoProfesional)
+    private userTipoProfesionalRepository: Repository<UserTipoProfesional>,
   ) {}
 
   async create(createUserDto: CreateUserDto) {
@@ -102,6 +108,23 @@ export class UsersService {
       image: compressedImage,
       hasImage: true,
     });
+  }
+
+  async uploadCertificate(
+    userTipoProfesionalId: number,
+    userId: number,
+    certificate: Buffer,
+  ) {
+    if (!certificate) {
+      throw new NotFoundException('No se ha subido un certificado');
+    }
+
+    return await this.userTipoProfesionalRepository.update(
+      { id: userTipoProfesionalId, user: { id: userId } },
+      {
+        archivo: certificate,
+      },
+    );
   }
 
   async remove(id: number) {
@@ -327,5 +350,26 @@ export class UsersService {
 
     if (!result) throw new NotFoundException('Error al asignar el usuario');
     return await this.getUserByProfesional(profesionalId, userId);
+  }
+
+  async assignTipoProfesionales(userId: number, tipoProfesionalIds: number[]) {
+    for (const tipoId of tipoProfesionalIds) {
+      const tipo = await this.tipoProfesionalRepository.findOne({
+        where: { id: tipoId },
+      });
+      if (!tipo) {
+        throw new NotFoundException(
+          `TipoProfesional con id ${tipoId} no encontrado`,
+        );
+      }
+      const userTipoProf = new UserTipoProfesional();
+      userTipoProf.user = { id: userId } as User;
+      userTipoProf.tipoProfesional = tipo;
+      await this.userTipoProfesionalRepository.save(userTipoProf);
+    }
+  }
+
+  getTiposProfesional() {
+    return this.tipoProfesionalRepository.find();
   }
 }

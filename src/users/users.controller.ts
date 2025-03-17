@@ -11,6 +11,7 @@ import {
   BadRequestException,
   UploadedFile,
   UseInterceptors,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
@@ -29,6 +30,11 @@ export class UsersController {
     return this.usersService.findAll();
   }
 
+  @Get('tipos-profesional')
+  getTiposProfesional() {
+    return this.usersService.getTiposProfesional();
+  }
+
   @Get('profesionales/recordatorios')
   @UseGuards(AuthGuard)
   getProfesionalesRecordatorios(@Req() request: RequestWithUser) {
@@ -45,6 +51,19 @@ export class UsersController {
       userId,
       request.user.id,
     );
+  }
+
+  @Post('profesionales/certificado')
+  @UseInterceptors(FileInterceptor('certificate'))
+  uploadCertificado(
+    @Body('userTipoProfesionalId') userTipoProfesionalId: number,
+    @Body('userId') userId: number,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
+    if (!file || !userTipoProfesionalId || !userId) {
+      throw new UnauthorizedException('Certificado, userTipoProfesionalId y userId son requeridos');
+    }
+    return this.usersService.uploadCertificate(userTipoProfesionalId, userId, file.buffer);
   }
 
   @Get('profesionales')

@@ -3,6 +3,7 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthGuard } from './guards/auth.guard';
+import { RegisterProfesionalDto } from './dto/register-profesional.dto';
 
 @Controller('auth')
 export class AuthController {
@@ -20,6 +21,12 @@ export class AuthController {
     register(@Body() registerDto: RegisterDto) {
         return this.authService.register(registerDto);
     } 
+
+    @Post('register-profesional')
+    registerProfesional(@Body() registerDto: RegisterProfesionalDto) {
+        console.log(registerDto);
+        return this.authService.registerProfesional(registerDto);
+    }
 
     @Get('profile/:email')
     @UseGuards(AuthGuard)
