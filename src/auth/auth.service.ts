@@ -10,6 +10,7 @@ import { RegisterDto } from './dto/register.dto';
 import * as bcryptjs from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterProfesionalDto } from './dto/register-profesional.dto';
+import { Role } from 'src/users/entities/role.enum';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +27,54 @@ export class AuthService {
 
     if (user.email !== loginDto.email) {
       throw new UnauthorizedException('Email o contraseña incorrectos');
+    }
+
+    const isPasswordValid = await bcryptjs.compare(
+      loginDto.password,
+      user.password,
+    );
+
+    if (!isPasswordValid) {
+      console.log('Password incorrecto');
+      throw new UnauthorizedException('Email o contraseña incorrectos');
+    }
+
+    let payload: any = {
+      firstName: user.firstName,
+      lastName: user.lastName,
+      dni: user.dni,
+      email: user.email,
+      role: user.role,
+      id: user.id,
+      hasImage: user.hasImage,
+    };
+
+    if (user.userTipoProfesionales.length > 0) {
+      payload = {
+        ...payload,
+        userTipoProfesionales: user.userTipoProfesionales,
+      };
+    }
+
+    const token = await this.jwtService.signAsync(payload);
+
+    payload = { ...payload, token } as typeof payload & { token: string };
+
+    return payload;
+  }
+
+  async loginProfesional(loginDto: LoginDto) {
+    const user = await this.usersService.findOneByEmail(loginDto.email);
+    if (!user) {
+      throw new UnauthorizedException('Email o contraseña incorrectos');
+    }
+
+    if (user.email !== loginDto.email) {
+      throw new UnauthorizedException('Email o contraseña incorrectos');
+    }
+
+    if (user.role === Role.Usuario) {
+      throw new UnauthorizedException('Esta web es solo para profesionales');
     }
 
     const isPasswordValid = await bcryptjs.compare(

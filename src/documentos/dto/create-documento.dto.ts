@@ -24,6 +24,14 @@ export class CreateDocumentoDto {
   @IsString()
   apellidoProfesional?: string;
 
+  @IsOptional()
+  @IsString()
+  emailProfesional?: string;
+
+  @IsOptional()
+  @IsString()
+  dniProfesional?: string;
+
   // Id del profesional (si está registrado)
   @IsOptional()
   @IsNumber()

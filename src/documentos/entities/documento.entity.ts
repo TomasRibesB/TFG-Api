@@ -4,6 +4,7 @@ import {
   PrimaryGeneratedColumn,
   ManyToOne,
   ManyToMany,
+  JoinTable,
 } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 import { TipoDocumento } from './tipoDocumentos.enum';
@@ -56,11 +57,12 @@ export class Documento {
   tipoProfesional: TipoProfesional | null; //por si el profesional no esta registrado en la base de datos
 
   @ManyToOne(() => User, (user) => user.documentos)
-  profesional: User | null; //si el profesional esta registrado en la base de datos
+  profesional?: User | null; //si el profesional esta registrado en la base de datos
 
   @ManyToOne(() => User, (user) => user.documentos)
   usuario: User;
 
   @ManyToMany(() => User, (user) => user.documentosVisibles)
+  @JoinTable()
   visibilidad: User[];
 }

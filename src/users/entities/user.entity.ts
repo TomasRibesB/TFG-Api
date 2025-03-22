@@ -16,7 +16,7 @@ import { PlanNutricional } from 'src/plan-nutricional/entities/plan-nutricional.
 import { Documento } from 'src/documentos/entities/documento.entity';
 import { UserTipoProfesional } from 'src/tipo-profesional/entities/user-tipo-profesional.entity';
 import { Sex } from './sex.enum';
-
+import { PermisoDocumento } from 'src/documentos/entities/permisoDocumento.entity';
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
@@ -111,4 +111,7 @@ export class User {
 
   @OneToMany(() => Ticket, (ticket) => ticket.usuario)
   ticketsUsuario: Ticket[];
+
+  @OneToMany(() => PermisoDocumento, (permisoDocumento) => permisoDocumento.usuario)
+  permisosDocumentos: PermisoDocumento[];
 }

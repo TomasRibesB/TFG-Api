@@ -20,6 +20,8 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RequestWithUser } from 'src/auth/interfaces/requestWithUser.interface';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { Response as ExpressResponse } from 'express';
+import { PermisoDocumento } from './entities/permisoDocumento.entity';
+import { Documento } from './entities/documento.entity';
 
 @Controller('documentos')
 export class DocumentosController {
@@ -61,9 +63,7 @@ export class DocumentosController {
 
   @UseGuards(AuthGuard)
   @Delete(':id')
-  remove(
-    @Req() request: RequestWithUser,
-    @Param('id') id: string) {
+  remove(@Req() request: RequestWithUser, @Param('id') id: string) {
     return this.documentosService.remove(+id, request.user.id);
   }
 
@@ -135,5 +135,46 @@ export class DocumentosController {
     );
     res.setHeader('Content-Type', contentType);
     res.send(archivo);
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('permiso')
+  async createPermisoDocumento(
+    @Req() request: RequestWithUser,
+  ): Promise<PermisoDocumento> {
+    return await this.documentosService.createPermisoDocumento(request.user.id);
+  }
+
+  @Get('permiso/:code')
+  async getUserPermisoDocumento(
+    @Param('code') code: string,
+  ): Promise<PermisoDocumento> {
+    return await this.documentosService.getUserPermisoDocumento(code);
+  }
+
+  @Post('no-user')
+  async createByNoUser(
+    @Body('documento') createDocumentoDto: CreateDocumentoDto,
+    @Body('code') code: string,
+  ): Promise<Documento> {
+    return await this.documentosService.createByNoUser(
+      createDocumentoDto,
+      code,
+    );
+  }
+
+  @Put('archivo/no-user/:id/:code')
+  @UseInterceptors(FileInterceptor('archivo'))
+  uploadDocumentoArchivoByNoUse(
+    @Param('id') id: string,
+    @Param('code') code: string,
+    @UploadedFile() archivo: Express.Multer.File,
+    //@Req() request: RequestWithUser,
+  ) {
+    return this.documentosService.uploadDocumentoArchivoByNoUser(
+      +id,
+      archivo.buffer,
+      code,
+    );
   }
 }

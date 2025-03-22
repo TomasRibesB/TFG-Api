@@ -1,12 +1,19 @@
 // src/documentos/documentos.service.ts
-import { Injectable } from '@nestjs/common';
-import { Repository } from 'typeorm';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { Repository, Not } from 'typeorm';
 import { Documento } from './entities/documento.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateDocumentoDto } from './dto/create-documento.dto';
 import { UpdateDocumentoDto } from './dto/update-documento.dto';
 import { TipoProfesional } from 'src/tipo-profesional/entities/tipo-profesional.entity';
+import { PermisoDocumento } from './entities/permisoDocumento.entity';
 import * as sharp from 'sharp';
+import { User } from 'src/users/entities/user.entity';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class DocumentosService {
@@ -15,6 +22,8 @@ export class DocumentosService {
     private documentoRepository: Repository<Documento>,
     @InjectRepository(TipoProfesional)
     private tipoProfesionalRepository: Repository<TipoProfesional>,
+    @InjectRepository(PermisoDocumento)
+    private permisoDocumentoRepository: Repository<PermisoDocumento>,
   ) {}
 
   async create(createDocumentoDto: CreateDocumentoDto): Promise<Documento> {
@@ -79,10 +88,10 @@ export class DocumentosService {
       } else {
         processedBuffer = archivoBuffer;
       }
-    } catch (error) {
+    } catch {
       // Si Sharp no puede leer los metadatos, consideramos que no es una imagen
       processedBuffer = archivoBuffer;
-      console.error(error);
+      console.error('El archivo no es una imagen, se guardará sin procesar');
     }
 
     // Actualizar directamente en la base de datos evitando volver a insertar
@@ -107,14 +116,17 @@ export class DocumentosService {
     return await this.documentoRepository.save(documento);
   }
 
-  findByUser(id: number) {
+  async findByUser(id: number) {
     return this.documentoRepository.find({
       where: { usuario: { id }, fechaBaja: null },
       relations: ['profesional'],
     });
   }
 
-  findDocumentsFoyProfesionalByUser(profesionalId: number, userId: number) {
+  async findDocumentsFoyProfesionalByUser(
+    profesionalId: number,
+    userId: number,
+  ) {
     console.log(profesionalId, userId);
     return this.documentoRepository.find({
       where: {
@@ -125,7 +137,7 @@ export class DocumentosService {
     });
   }
 
-  findVisibleDocumentsForProfesionalByUser(
+  async findVisibleDocumentsForProfesionalByUser(
     profesionalId: number,
     userId: number,
   ) {
@@ -133,6 +145,7 @@ export class DocumentosService {
       where: {
         usuario: { id: userId },
         visibilidad: { id: profesionalId },
+        profesional: { id: Not(profesionalId) },
         fechaBaja: null,
       },
       relations: ['usuario'],
@@ -150,5 +163,112 @@ export class DocumentosService {
       throw new Error(`Documento con id ${id} no encontrado`);
     }
     return documento;
+  }
+
+  async createPermisoDocumento(usuarioId: number): Promise<PermisoDocumento> {
+    const permisoActivo = await this.permisoDocumentoRepository.findOne({
+      where: { usuario: { id: usuarioId }, fechaBaja: null },
+    });
+
+    if (permisoActivo) {
+      throw new UnauthorizedException(
+        `PermisoDocumento para el usuario con id ${usuarioId} ya existe`,
+      );
+    }
+
+    const permisoDocumento = this.permisoDocumentoRepository.create({
+      code: uuidv4(),
+      usuario: { id: usuarioId } as User,
+    });
+    return await this.permisoDocumentoRepository.save(permisoDocumento);
+  }
+
+  async getUserPermisoDocumento(code: string): Promise<PermisoDocumento> {
+    const permisoDocumento = await this.permisoDocumentoRepository.findOne({
+      where: { code },
+      relations: ['usuario'],
+    });
+    if (!permisoDocumento) {
+      throw new NotFoundException(
+        `PermisoDocumento con code ${code} no encontrado`,
+      );
+    }
+    if (permisoDocumento.fechaBaja) {
+      throw new UnauthorizedException(
+        `PermisoDocumento con code ${code} dado de baja`,
+      );
+    }
+    return permisoDocumento;
+  }
+
+  async createByNoUser(createDocumentoDto: CreateDocumentoDto, code: string) {
+    const permisoDocumento = await this.permisoDocumentoRepository.findOne({
+      where: { code },
+      relations: ['usuario'],
+    });
+
+    if (!permisoDocumento) {
+      throw new NotFoundException(
+        `PermisoDocumento con code ${code} no encontrado`,
+      );
+    }
+    if (permisoDocumento.fechaBaja) {
+      throw new UnauthorizedException(
+        `PermisoDocumento con code ${code} dado de baja`,
+      );
+    }
+    const newDocumento = this.documentoRepository.create({
+      ...createDocumentoDto,
+      usuario: { id: permisoDocumento.usuario.id },
+      tipoProfesional: { id: createDocumentoDto.tipoProfesionalId },
+    });
+    return await this.documentoRepository.save(newDocumento);
+  }
+
+  async uploadDocumentoArchivoByNoUser(
+    id: number,
+    archivoBuffer: Buffer,
+    code: string,
+  ) {
+    const permisoDocumento = await this.permisoDocumentoRepository.findOne({
+      where: { code },
+      relations: ['usuario'],
+    });
+    if (!permisoDocumento) {
+      throw new NotFoundException(
+        `PermisoDocumento con code ${code} no encontrado`,
+      );
+    }
+    if (permisoDocumento.fechaBaja) {
+      throw new UnauthorizedException(
+        `PermisoDocumento con code ${code} dado de baja`,
+      );
+    }
+
+    permisoDocumento.fechaBaja = new Date();
+    await this.permisoDocumentoRepository.save(permisoDocumento);
+    // Procesar el buffer
+    let processedBuffer: Buffer;
+    try {
+      const metadata = await sharp(archivoBuffer).metadata();
+      if (
+        metadata.format &&
+        ['jpeg', 'png', 'webp', 'tiff'].includes(metadata.format)
+      ) {
+        processedBuffer = await sharp(archivoBuffer)
+          .jpeg({ quality: 80 })
+          .toBuffer();
+      } else {
+        processedBuffer = archivoBuffer;
+      }
+    } catch {
+      // Si Sharp no puede leer los metadatos, consideramos que no es una imagen
+      processedBuffer = archivoBuffer;
+      console.error('El archivo no es una imagen, se guardará sin procesar');
+    }
+
+    // Actualizar directamente en la base de datos evitando volver a insertar
+    await this.documentoRepository.update(id, { archivo: processedBuffer });
+    return await this.documentoRepository.findOne({ where: { id } });
   }
 }
