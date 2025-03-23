@@ -4,7 +4,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Repository, Not } from 'typeorm';
+import { Repository, Not, IsNull } from 'typeorm';
 import { Documento } from './entities/documento.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateDocumentoDto } from './dto/create-documento.dto';
@@ -118,7 +118,7 @@ export class DocumentosService {
 
   async findByUser(id: number) {
     return this.documentoRepository.find({
-      where: { usuario: { id }, fechaBaja: null },
+      where: { usuario: { id }, fechaBaja: IsNull() },
       relations: ['profesional'],
     });
   }
@@ -146,7 +146,7 @@ export class DocumentosService {
         usuario: { id: userId },
         visibilidad: { id: profesionalId },
         profesional: { id: Not(profesionalId) },
-        fechaBaja: null,
+        fechaBaja: IsNull(),
       },
       relations: ['usuario'],
     });
@@ -167,7 +167,7 @@ export class DocumentosService {
 
   async createPermisoDocumento(usuarioId: number): Promise<PermisoDocumento> {
     const permisoActivo = await this.permisoDocumentoRepository.findOne({
-      where: { usuario: { id: usuarioId }, fechaBaja: null },
+      where: { usuario: { id: usuarioId }, fechaBaja: IsNull() },
     });
 
     if (permisoActivo) {
@@ -199,6 +199,26 @@ export class DocumentosService {
       );
     }
     return permisoDocumento;
+  }
+
+  async getPermisoDocumentoByUser(userId: number): Promise<PermisoDocumento> {
+    console.log(userId);
+    return await this.permisoDocumentoRepository.findOne({
+      where: { usuario: { id: userId }, fechaBaja: IsNull() },
+    });
+  }
+
+  async deletePermisoDocumentoByUser(userId: number) {
+    const permisoDocumento = await this.permisoDocumentoRepository.findOne({
+      where: { usuario: { id: userId }, fechaBaja: IsNull() },
+    });
+    if (!permisoDocumento) {
+      throw new NotFoundException(
+        `PermisoDocumento para el usuario con id ${userId} no encontrado`,
+      );
+    }
+    permisoDocumento.fechaBaja = new Date();
+    return await this.permisoDocumentoRepository.save(permisoDocumento);
   }
 
   async createByNoUser(createDocumentoDto: CreateDocumentoDto, code: string) {

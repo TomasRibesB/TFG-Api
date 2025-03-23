@@ -145,6 +145,24 @@ export class DocumentosController {
     return await this.documentosService.createPermisoDocumento(request.user.id);
   }
 
+  @UseGuards(AuthGuard)
+  @Get('permiso/user')
+  async getPermisoDocumentoByUser(
+    @Req() request: RequestWithUser,
+  ): Promise<PermisoDocumento> {
+    return await this.documentosService.getPermisoDocumentoByUser(
+      request.user.id,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete('permiso/user')
+  async deletePermisoDocumentoByUser(@Req() request: RequestWithUser) {
+    return await this.documentosService.deletePermisoDocumentoByUser(
+      request.user.id,
+    );
+  }
+
   @Get('permiso/:code')
   async getUserPermisoDocumento(
     @Param('code') code: string,
