@@ -6,6 +6,7 @@ import { RutinaEjercicio } from './entities/rutina-ejercicio.entity';
 import { Ejercicio } from 'src/ejercicios/entities/ejercicio.entity';
 import { Routine } from 'src/routines/entities/routine.entity';
 import { Registro } from './entities/registro.entity';
+import { GruposMuscularesService } from 'src/grupos-musculares/grupos-musculares.service';
 
 @Injectable()
 export class RutinaEjercicioService {
@@ -18,6 +19,7 @@ export class RutinaEjercicioService {
     private routineRepository: Repository<Routine>,
     @InjectRepository(Registro)
     private registroRepository: Repository<Registro>,
+    private gruposMuscularesService: GruposMuscularesService,
   ) {}
 
   async create(createRutinaEjercicioDto: CreateRutinaEjercicioDto) {
@@ -33,10 +35,20 @@ export class RutinaEjercicioService {
     return Promise.all(registros);
   }
 
-  async findAll() {
-    return this.ejercicioRegistroRepository.find({
-      where: { fechaBaja: null },
-    });
+  async findAllByUser(id: number) {
+    const registro = await this.ejercicioRegistroRepository
+      .createQueryBuilder('rutinaEjercicio')
+      .leftJoinAndSelect('rutinaEjercicio.ejercicio', 'ejercicio')
+      .leftJoinAndSelect('ejercicio.categoriaEjercicio', 'categoriaEjercicio')
+      .leftJoinAndSelect('ejercicio.gruposMusculares', 'gruposMusculares')
+      .leftJoinAndSelect('rutinaEjercicio.routine', 'routine')
+      .leftJoin('routine.user', 'user')
+      .leftJoinAndSelect('rutinaEjercicio.registros', 'registros')
+      .where('user.id = :id', { id })
+      .getMany();
+
+      const gruposMusculares = await this.gruposMuscularesService.findAll();
+      return { registro, gruposMusculares };
   }
 
   async findOne(id: number) {

@@ -6,10 +6,12 @@ import { RutinaEjercicio } from './entities/rutina-ejercicio.entity';
 import { Ejercicio } from 'src/ejercicios/entities/ejercicio.entity';
 import { Routine } from 'src/routines/entities/routine.entity';
 import { Registro } from './entities/registro.entity';
+import { GruposMuscularesService } from 'src/grupos-musculares/grupos-musculares.service';
+import {GruposMusculares} from 'src/grupos-musculares/entities/grupos-musculare.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([RutinaEjercicio, Ejercicio, Routine, Registro])],
+  imports: [TypeOrmModule.forFeature([RutinaEjercicio, Ejercicio, Routine, Registro, GruposMusculares])],
   controllers: [RutinaEjercicioController],
-  providers: [RutinaEjercicioService],
+  providers: [RutinaEjercicioService, GruposMuscularesService],
 })
 export class RutinaEjercicioModule {}

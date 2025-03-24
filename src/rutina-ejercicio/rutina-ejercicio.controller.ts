@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards, Req } from '@nestjs/common';
 import { RutinaEjercicioService } from './rutina-ejercicio.service';
 import { CreateRutinaEjercicioDto } from './dto/create-rutina-ejercicio.dto';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RequestWithUser } from 'src/auth/interfaces/requestWithUser.interface';
 @Controller('ejercicio-rutina')
 export class RutinaEjercicioController {
   constructor(
@@ -22,8 +23,8 @@ export class RutinaEjercicioController {
 
   @UseGuards(AuthGuard)
   @Get()
-  findAll() {
-    return this.ejercicioRegistroService.findAll();
+  findAllByUser(@Req() request: RequestWithUser) {
+    return this.ejercicioRegistroService.findAllByUser(request.user.id);
   }
 
   @UseGuards(AuthGuard)
