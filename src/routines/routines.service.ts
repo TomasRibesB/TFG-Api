@@ -9,7 +9,7 @@ import { Ejercicio } from 'src/ejercicios/entities/ejercicio.entity';
 import { Routine } from './entities/routine.entity';
 import { RutinaEjercicio } from 'src/rutina-ejercicio/entities/rutina-ejercicio.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, IsNull, Not, Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { UsersService } from 'src/users/users.service';
 import { User } from 'src/users/entities/user.entity';
 
@@ -288,15 +288,21 @@ export class RoutinesService {
     profesionalId: number,
     userId: number,
   ): Promise<Routine[]> {
-    return this.routineRepository.find({
-      where: {
-        user: { id: userId },
-        visibilidad: { id: profesionalId },
-        trainer: { id: Not(profesionalId) },
-        fechaBaja: IsNull(),
-      },
-      relations: ['trainer', 'visibilidad'],
-    });
+    console.log('profesionalId', profesionalId, 'userId', userId);
+    return this.routineRepository
+      .createQueryBuilder('routine')
+      .leftJoinAndSelect(
+        'routine.rutinaEjercicio',
+        'rutinaEjercicio',
+        'rutinaEjercicio.fechaBaja IS NULL',
+      )
+      .leftJoinAndSelect('rutinaEjercicio.ejercicio', 'ejercicio')
+      .leftJoin('routine.visibilidad', 'visibilidad')
+      .where('routine.user.id = :userId', { userId })
+      .andWhere('visibilidad.id = :profesionalId', { profesionalId })
+      .andWhere('routine.trainer.id != :profesionalId', { profesionalId })
+      .andWhere('routine.fechaBaja IS NULL')
+      .getMany();
   }
 
   async asignarVisibilidadRoutine(

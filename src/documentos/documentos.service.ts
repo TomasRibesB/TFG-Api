@@ -121,7 +121,7 @@ export class DocumentosService {
   async findByUser(id: number) {
     return this.documentoRepository.find({
       where: { usuario: { id }, fechaBaja: IsNull() },
-      relations: ['profesional'],
+      relations: ['profesional', 'visibilidad'],
     });
   }
 
