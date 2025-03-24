@@ -1,38 +1,44 @@
-import { Controller, Get, Post, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Param, Body, UseGuards } from '@nestjs/common';
 import { RutinaEjercicioService } from './rutina-ejercicio.service';
 import { CreateRutinaEjercicioDto } from './dto/create-rutina-ejercicio.dto';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 @Controller('ejercicio-rutina')
 export class RutinaEjercicioController {
   constructor(
     private readonly ejercicioRegistroService: RutinaEjercicioService,
   ) {}
 
+  @UseGuards(AuthGuard)
   @Post()
   create(@Body() createRutinaEjercicioDto: CreateRutinaEjercicioDto) {
     return this.ejercicioRegistroService.create(createRutinaEjercicioDto);
   }
 
+  @UseGuards(AuthGuard)
   @Post('registro')
   createRegistro(@Body('RuExIds') RuExIds: number[]) {
-
     return this.ejercicioRegistroService.createRegistros(RuExIds);
   }
 
+  @UseGuards(AuthGuard)
   @Get()
   findAll() {
     return this.ejercicioRegistroService.findAll();
   }
 
+  @UseGuards(AuthGuard)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.ejercicioRegistroService.findOne(+id);
   }
 
+  @UseGuards(AuthGuard)
   @Get('routine/:id/ejercicio/:id/last')
   findLastRutinaEjercicio(@Param('id') id: string) {
     return this.ejercicioRegistroService.findLastRutinaEjercicio(+id);
   }
 
+  @UseGuards(AuthGuard)
   @Get('routine/:rid/ejercicio/:eid')
   findRutinaEjercicio(@Param('rid') rid: string, @Param('eid') eid: string) {
     return this.ejercicioRegistroService.findRutinaEjercicio(+rid, +eid);
