@@ -68,4 +68,30 @@ export class PlanNutricionalController {
   remove(@Req() request: RequestWithUser, @Param('id') id: string) {
     return this.planNutricionalService.remove(+id, request.user.id);
   }
+
+  @UseGuards(AuthGuard)
+  @Get(':userId/visible')
+  findVisiblePlansForProfesionalByUser(
+    @Param('userId') userId: string,
+    @Req() request: RequestWithUser,
+  ) {
+    return this.planNutricionalService.findVisiblePlansForProfesionalByUser(
+      request.user.id,
+      +userId,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('visibilidad/:planId')
+  asignarVisibilidadDocumento(
+    @Param('planId') planId: string,
+    @Body('profesionalesIds') profesionalesIds: number[],
+    @Req() request: RequestWithUser,
+  ) {
+    return this.planNutricionalService.asignarVisibilidadPlan(
+      +planId,
+      profesionalesIds,
+      request.user.id,
+    );
+  }
 }

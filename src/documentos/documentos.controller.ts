@@ -97,6 +97,21 @@ export class DocumentosController {
     );
   }
 
+  //asignarVisibilidadDocumento
+  @UseGuards(AuthGuard)
+  @Post('visibilidad/:documentoId')
+  asignarVisibilidadDocumento(
+    @Param('documentoId') documentoId: string,
+    @Body('profesionalesIds') profesionalesIds: number[],
+    @Req() request: RequestWithUser,
+  ) {
+    return this.documentosService.asignarVisibilidadDocumento(
+      +documentoId,
+      profesionalesIds,
+      request.user.id,
+    );
+  }
+
   @UseGuards(AuthGuard)
   @Get('archivo/:id')
   async download(@Param('id') id: string, @Res() res: ExpressResponse) {

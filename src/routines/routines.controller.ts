@@ -57,4 +57,30 @@ export class RoutinesController {
   ) {
     return this.routinesService.findForTrainerByUser(request.user.id, +id);
   }
+
+  @UseGuards(AuthGuard)
+  @Get(':userId/visible')
+  findVisibleRoutinesForProfesionalByUser(
+    @Param('userId') userId: string,
+    @Req() request: RequestWithUser,
+  ) {
+    return this.routinesService.findVisibleRoutinesForProfesionalByUser(
+      request.user.id,
+      +userId,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Post('visibilidad/:routineId')
+  asignarVisibilidadRoutine(
+    @Param('routineId') routineId: string,
+    @Body('profesionalesIds') profesionalesIds: number[],
+    @Req() request: RequestWithUser,
+  ) {
+    return this.routinesService.asignarVisibilidadRoutine(
+      +routineId,
+      profesionalesIds,
+      request.user.id,
+    );
+  }
 }

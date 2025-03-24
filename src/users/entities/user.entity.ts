@@ -55,7 +55,6 @@ export class User {
   @Column({ nullable: false, default: false })
   hasImage: boolean;
 
-
   @OneToMany(() => Routine, (routine) => routine.user)
   routines?: Routine[];
 
@@ -89,6 +88,15 @@ export class User {
   @ManyToMany(() => Documento, (documento) => documento.visibilidad)
   documentosVisibles?: Documento[];
 
+  @ManyToMany(
+    () => PlanNutricional,
+    (planNutricional) => planNutricional.visibilidad,
+  )
+  planesNutricionalesVisibles?: PlanNutricional[];
+
+  @ManyToMany(() => Routine, (routine) => routine.visibilidad)
+  routinesVisibles?: Routine[];
+
   @ManyToMany(() => User, (user) => user.profesionales)
   @JoinTable()
   usuarios: User[];
@@ -112,6 +120,9 @@ export class User {
   @OneToMany(() => Ticket, (ticket) => ticket.usuario)
   ticketsUsuario: Ticket[];
 
-  @OneToMany(() => PermisoDocumento, (permisoDocumento) => permisoDocumento.usuario)
+  @OneToMany(
+    () => PermisoDocumento,
+    (permisoDocumento) => permisoDocumento.usuario,
+  )
   permisosDocumentos: PermisoDocumento[];
 }

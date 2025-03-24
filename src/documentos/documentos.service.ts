@@ -4,7 +4,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Repository, Not, IsNull } from 'typeorm';
+import { Repository, Not, IsNull, In } from 'typeorm';
 import { Documento } from './entities/documento.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateDocumentoDto } from './dto/create-documento.dto';
@@ -24,6 +24,8 @@ export class DocumentosService {
     private tipoProfesionalRepository: Repository<TipoProfesional>,
     @InjectRepository(PermisoDocumento)
     private permisoDocumentoRepository: Repository<PermisoDocumento>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
   async create(createDocumentoDto: CreateDocumentoDto): Promise<Documento> {
@@ -150,6 +152,26 @@ export class DocumentosService {
       },
       relations: ['usuario'],
     });
+  }
+
+  async asignarVisibilidadDocumento(
+    documentoId: number,
+    profesionalesIds: number[],
+    userId: number,
+  ) {
+    const documento = await this.documentoRepository.findOne({
+      where: { id: documentoId, usuario: { id: userId } },
+    });
+    if (!documento) {
+      throw new Error(`Documento con id ${documentoId} no encontrado`);
+    }
+
+    const profesionales = await this.userRepository.findBy({
+      id: In(profesionalesIds),
+    });
+
+    documento.visibilidad = profesionales;
+    return await this.documentoRepository.save(documento);
   }
 
   async findOneWithArchivo(id: number): Promise<Documento> {

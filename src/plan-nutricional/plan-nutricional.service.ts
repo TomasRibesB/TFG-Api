@@ -2,14 +2,17 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePlanNutricionalDto } from './dto/create-plan-nutricional.dto';
 import { UpdatePlanNutricionalDto } from './dto/update-plan-nutricional.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 import { PlanNutricional } from './entities/plan-nutricional.entity';
+import { User } from 'src/users/entities/user.entity';
 
 @Injectable()
 export class PlanNutricionalService {
   constructor(
     @InjectRepository(PlanNutricional)
     private planNutricionalRepository: Repository<PlanNutricional>,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
   async create(
@@ -65,7 +68,7 @@ export class PlanNutricionalService {
   findByUser(id: number) {
     return this.planNutricionalRepository.find({
       where: { paciente: { id }, fechaBaja: null },
-      relations: ['nutricionista'],
+      relations: ['nutricionista', 'visibilidad'],
     });
   }
 
@@ -91,5 +94,40 @@ export class PlanNutricionalService {
       );
     }
     return plan;
+  }
+
+  async findVisiblePlansForProfesionalByUser(
+    profesionalId: number,
+    userId: number,
+  ): Promise<PlanNutricional[]> {
+    return this.planNutricionalRepository.find({
+      where: {
+        paciente: { id: userId },
+        visibilidad: { id: profesionalId },
+        nutricionista: { id: Not(profesionalId) },
+        fechaBaja: IsNull(),
+      },
+      relations: ['nutricionista'],
+    });
+  }
+
+  async asignarVisibilidadPlan(
+    planId: number,
+    profesionalesIds: number[],
+    userId: number,
+  ): Promise<PlanNutricional> {
+    const plan = await this.planNutricionalRepository.findOne({
+      where: { id: planId, paciente: { id: userId } },
+    });
+    if (!plan) {
+      throw new Error(`Plan Nutricional con id ${planId} no encontrado`);
+    }
+
+    const profesionales = await this.userRepository.findBy({
+      id: In(profesionalesIds),
+    });
+
+    plan.visibilidad = profesionales;
+    return await this.planNutricionalRepository.save(plan);
   }
 }

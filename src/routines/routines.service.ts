@@ -9,7 +9,7 @@ import { Ejercicio } from 'src/ejercicios/entities/ejercicio.entity';
 import { Routine } from './entities/routine.entity';
 import { RutinaEjercicio } from 'src/rutina-ejercicio/entities/rutina-ejercicio.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, IsNull, Not, Repository } from 'typeorm';
 import { UsersService } from 'src/users/users.service';
 import { User } from 'src/users/entities/user.entity';
 
@@ -23,6 +23,8 @@ export class RoutinesService {
     @InjectRepository(Routine)
     private routineRepository: Repository<Routine>,
     private userService: UsersService,
+    @InjectRepository(User)
+    private userRepository: Repository<User>,
   ) {}
 
   async create(createRoutineDto: CreateRoutineDto, trainerId: number) {
@@ -94,6 +96,7 @@ export class RoutinesService {
       )
       .leftJoinAndSelect('rutinaEjercicio.ejercicio', 'ejercicio')
       .leftJoinAndSelect('routine.trainer', 'trainer')
+      .leftJoinAndSelect('routine.visibilidad', 'visibilidad')
       .where('routine.user.id = :id', { id })
       .andWhere('routine.fechaBaja IS NULL')
       .getMany();
@@ -279,5 +282,38 @@ export class RoutinesService {
     return this.routineRepository.findOne({
       where: { id: routineId, trainer: { id: trainerId } },
     });
+  }
+
+  async findVisibleRoutinesForProfesionalByUser(
+    profesionalId: number,
+    userId: number,
+  ): Promise<Routine[]> {
+    return this.routineRepository.find({
+      where: {
+        user: { id: userId },
+        visibilidad: { id: profesionalId },
+        trainer: { id: Not(profesionalId) },
+        fechaBaja: IsNull(),
+      },
+      relations: ['trainer', 'visibilidad'],
+    });
+  }
+
+  async asignarVisibilidadRoutine(
+    routineId: number,
+    profesionalesIds: number[],
+    userId: number,
+  ): Promise<Routine> {
+    const routine = await this.routineRepository.findOne({
+      where: { id: routineId, user: { id: userId } },
+    });
+    if (!routine) {
+      throw new Error(`Rutina con id ${routineId} no encontrada`);
+    }
+    const profesionales = await this.userRepository.findBy({
+      id: In(profesionalesIds),
+    });
+    routine.visibilidad = profesionales;
+    return await this.routineRepository.save(routine);
   }
 }

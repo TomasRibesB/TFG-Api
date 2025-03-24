@@ -4,6 +4,8 @@ import {
   PrimaryGeneratedColumn,
   OneToMany,
   ManyToOne,
+  JoinTable,
+  ManyToMany,
 } from 'typeorm';
 import { RutinaEjercicio } from 'src/rutina-ejercicio/entities/rutina-ejercicio.entity';
 import { User } from 'src/users/entities/user.entity';
@@ -41,4 +43,8 @@ export class Routine {
 
   @Column({ type: 'timestamp', nullable: true })
   fechaBaja: Date | null;
+
+  @ManyToMany(() => User, (user) => user.routinesVisibles)
+  @JoinTable()
+  visibilidad: User[];
 }

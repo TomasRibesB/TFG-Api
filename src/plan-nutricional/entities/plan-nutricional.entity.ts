@@ -1,4 +1,11 @@
-import { Column, Entity, PrimaryGeneratedColumn, ManyToOne } from 'typeorm';
+import {
+  Column,
+  Entity,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinTable,
+  ManyToMany,
+} from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 
 @Entity()
@@ -42,4 +49,8 @@ export class PlanNutricional {
 
   @ManyToOne(() => User, (user) => user.planesNutricionalesPaciente)
   paciente: User;
+
+  @ManyToMany(() => User, (user) => user.planesNutricionalesVisibles)
+  @JoinTable()
+  visibilidad: User[];
 }
