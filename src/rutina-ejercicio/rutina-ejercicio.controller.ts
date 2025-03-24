@@ -1,15 +1,21 @@
 import { Controller, Get, Post, Param, Body } from '@nestjs/common';
 import { RutinaEjercicioService } from './rutina-ejercicio.service';
 import { CreateRutinaEjercicioDto } from './dto/create-rutina-ejercicio.dto';
-
-
 @Controller('ejercicio-rutina')
 export class RutinaEjercicioController {
-  constructor(private readonly ejercicioRegistroService: RutinaEjercicioService) {}
+  constructor(
+    private readonly ejercicioRegistroService: RutinaEjercicioService,
+  ) {}
 
   @Post()
   create(@Body() createRutinaEjercicioDto: CreateRutinaEjercicioDto) {
     return this.ejercicioRegistroService.create(createRutinaEjercicioDto);
+  }
+
+  @Post('registro')
+  createRegistro(@Body('RuExIds') RuExIds: number[]) {
+
+    return this.ejercicioRegistroService.createRegistros(RuExIds);
   }
 
   @Get()
@@ -31,8 +37,6 @@ export class RutinaEjercicioController {
   findRutinaEjercicio(@Param('rid') rid: string, @Param('eid') eid: string) {
     return this.ejercicioRegistroService.findRutinaEjercicio(+rid, +eid);
   }
-
-
 
   /*@Patch(':id')
   update(@Param('id') id: string, @Body() updateRutinaEjercicioDto: UpdateRutinaEjercicioDto) {

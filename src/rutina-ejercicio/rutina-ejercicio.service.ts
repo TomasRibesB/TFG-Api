@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { RutinaEjercicio } from './entities/rutina-ejercicio.entity';
 import { Ejercicio } from 'src/ejercicios/entities/ejercicio.entity';
 import { Routine } from 'src/routines/entities/routine.entity';
+import { Registro } from './entities/registro.entity';
 
 @Injectable()
 export class RutinaEjercicioService {
@@ -15,18 +16,33 @@ export class RutinaEjercicioService {
     private ejercicioRepository: Repository<Ejercicio>,
     @InjectRepository(Routine)
     private routineRepository: Repository<Routine>,
+    @InjectRepository(Registro)
+    private registroRepository: Repository<Registro>,
   ) {}
 
   async create(createRutinaEjercicioDto: CreateRutinaEjercicioDto) {
     return this.ejercicioRegistroRepository.save(createRutinaEjercicioDto);
   }
 
+  async createRegistros(RuExIds: number[]) {
+    //creo un registro por cada rutina-ejercicio
+    const registros = RuExIds.map((RuExId) => {
+      return this.registroRepository.save({ rutinaEjercicio: { id: RuExId } });
+    });
+
+    return Promise.all(registros);
+  }
+
   async findAll() {
-    return this.ejercicioRegistroRepository.find({ where: { fechaBaja: null } });
+    return this.ejercicioRegistroRepository.find({
+      where: { fechaBaja: null },
+    });
   }
 
   async findOne(id: number) {
-    return this.ejercicioRegistroRepository.findOne({ where: { id , fechaBaja: null } });
+    return this.ejercicioRegistroRepository.findOne({
+      where: { id, fechaBaja: null },
+    });
   }
 
   async findLastRutinaEjercicio(id: number) {

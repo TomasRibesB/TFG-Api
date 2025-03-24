@@ -9,7 +9,6 @@ import {
 import { RutinaEjercicio } from 'src/rutina-ejercicio/entities/rutina-ejercicio.entity';
 import { CategoriaEjercicio } from 'src/categoria-ejercicios/entities/categoria-ejercicio.entity';
 import { GruposMusculares } from 'src/grupos-musculares/entities/grupos-musculare.entity';
-import { UnidadMedida } from './unidadMedida.enum';
 
 @Entity()
 export class Ejercicio {
@@ -20,25 +19,17 @@ export class Ejercicio {
   name: string;
 
   @Column({ length: 300, nullable: true })
-  description?: string;
-
-  @Column({ length: 300, nullable: true })
   demostration?: string;
 
   @Column({ length: 300, nullable: true })
   explication?: string;
 
-  @Column({ length: 1000, nullable: true })
-  keywords?: string;
-
-  // This is a one-to-many relationship with the RutinaEjercicio entity
   @OneToMany(
     () => RutinaEjercicio,
     (ejercicioRutina) => ejercicioRutina.ejercicio,
   )
   ejercicioRutina?: RutinaEjercicio[];
 
-  // This is a many-to-one relationship with the CategoriaEjercicio entity
   @ManyToMany(
     () => CategoriaEjercicio,
     (categoriaEjercicio) => categoriaEjercicio.ejercicios,
@@ -46,14 +37,10 @@ export class Ejercicio {
   @JoinTable()
   categoriaEjercicio: CategoriaEjercicio[];
 
-  // This is a many-to-one relationship with the GruposMusculares entity
   @ManyToMany(
     () => GruposMusculares,
     (GruposMusculares) => GruposMusculares.ejercicios,
   )
   @JoinTable()
   gruposMusculares: GruposMusculares[];
-
-  @Column({ type: 'enum', enum: UnidadMedida, nullable: false, default: UnidadMedida.Ninguna })
-  unidadMedida: UnidadMedida;
 }

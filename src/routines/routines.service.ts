@@ -74,6 +74,7 @@ export class RoutinesService {
       nuevoRegistro.repeticiones = registroDto.repeticiones;
       nuevoRegistro.medicion = registroDto.medicion;
       nuevoRegistro.fecha = new Date(registroDto.fecha);
+      nuevoRegistro.unidadMedida = registroDto.unidadMedida;
       routine.rutinaEjercicio.push(nuevoRegistro);
     }
 
@@ -195,6 +196,7 @@ export class RoutinesService {
         nuevoRegistro.repeticiones = registroDto.repeticiones;
         nuevoRegistro.medicion = registroDto.medicion;
         nuevoRegistro.fecha = new Date(registroDto.fecha);
+        nuevoRegistro.unidadMedida = registroDto.unidadMedida;
 
         // Agregar el nuevo registro a la colección (sin reemplazar los históricos)
         routine.rutinaEjercicio.push(nuevoRegistro);
