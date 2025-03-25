@@ -52,6 +52,12 @@ export class PlanNutricionalController {
   }
 
   @UseGuards(AuthGuard)
+  @Get('baja')
+  findBajaByUser(@Req() request: RequestWithUser) {
+    return this.planNutricionalService.obtenerRutinasPrevias(request.user.id);
+  }
+
+  @UseGuards(AuthGuard)
   @Get(':id')
   findForNutricionistByUser(
     @Req() request: RequestWithUser,

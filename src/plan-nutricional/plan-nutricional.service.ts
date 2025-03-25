@@ -130,4 +130,16 @@ export class PlanNutricionalService {
     plan.visibilidad = profesionales;
     return await this.planNutricionalRepository.save(plan);
   }
+
+  async obtenerRutinasPrevias(userId: number): Promise<PlanNutricional[]> {
+    if (isNaN(userId)) {
+      throw new Error('userId no es un número válido');
+    }
+    return this.planNutricionalRepository
+      .createQueryBuilder('plan')
+      .leftJoin('plan.paciente', 'paciente')
+      .where('paciente.id = :userId', { userId })
+      .andWhere('plan.fechaBaja IS NOT NULL')
+      .getMany();
+  }
 }
