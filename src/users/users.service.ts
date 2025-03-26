@@ -94,20 +94,27 @@ export class UsersService {
   }
 
   async uploadImage(id: number, image: Buffer) {
-    if (!image) {
+    try {
+      if (!image) {
+        return await this.userRepository.update(id, {
+          image: null,
+          hasImage: false,
+        });
+      }
+
+      // Comprimir la imagen y convertirla a JPEG con calidad 80%
+      const compressedImage = await sharp(image)
+        .jpeg({ quality: 80 })
+        .toBuffer();
+
+        console.log('compressedImage', compressedImage);
       return await this.userRepository.update(id, {
-        image: null,
-        hasImage: false,
+        image: compressedImage,
+        hasImage: true,
       });
+    } catch (error) {
+      console.log('error', error);
     }
-
-    // Comprimir la imagen y convertirla a JPEG con calidad 80%
-    const compressedImage = await sharp(image).jpeg({ quality: 80 }).toBuffer();
-
-    return await this.userRepository.update(id, {
-      image: compressedImage,
-      hasImage: true,
-    });
   }
 
   async uploadCertificate(
@@ -135,7 +142,7 @@ export class UsersService {
     const user =
       (await this.userRepository.find({
         where: { id },
-        relations: ['profesionales', 'profesionales.turnosProfesional'],
+        relations: ['profesionales', 'profesionales.turnosProfesional', 'profesionales.userTipoProfesionales.tipoProfesional'],
       })) || [];
 
     const profesionales = user.map((u) => u.profesionales).flat();
@@ -369,7 +376,11 @@ export class UsersService {
     }
   }
 
-  getTiposProfesional() {
-    return this.tipoProfesionalRepository.find();
+  async getTiposProfesional() {
+    return await this.tipoProfesionalRepository.find();
+  }
+
+  async getUserByUser(id: number) {
+    return await this.userRepository.findOneBy({ id });
   }
 }

@@ -35,6 +35,12 @@ export class UsersController {
     return this.usersService.getTiposProfesional();
   }
 
+  @Get('byUser')
+  @UseGuards(AuthGuard)
+  getUsersByUser(@Req() request: RequestWithUser) {
+    return this.usersService.getUserByUser(request.user.id);
+  }
+
   @Get('profesionales/recordatorios')
   @UseGuards(AuthGuard)
   getProfesionalesRecordatorios(@Req() request: RequestWithUser) {
@@ -143,6 +149,7 @@ export class UsersController {
     @UploadedFile() file: Express.Multer.File,
   ) {
     if (!file) {
+      console.log('file');
       throw new BadRequestException('Image is required');
     }
     return this.usersService.uploadImage(request.user.id, file.buffer);
