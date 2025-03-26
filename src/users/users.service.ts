@@ -142,7 +142,11 @@ export class UsersService {
     const user =
       (await this.userRepository.find({
         where: { id },
-        relations: ['profesionales', 'profesionales.turnosProfesional', 'profesionales.userTipoProfesionales.tipoProfesional'],
+        relations: [
+          'profesionales',
+          'profesionales.turnosProfesional',
+          'profesionales.userTipoProfesionales.tipoProfesional',
+        ],
       })) || [];
 
     const profesionales = user.map((u) => u.profesionales).flat();
@@ -270,6 +274,129 @@ export class UsersService {
     );
     const recordatoriosTurnosPendientes = turnosPendientes.map((turno) =>
       formatTurno(turno, 'Turno'),
+    );
+    const recordatoriosTickets = ticketsPendientes.map((ticket) =>
+      formatTicket(ticket),
+    );
+
+    return [
+      ...recordatoriosTurnosEnDosDias,
+      ...recordatoriosTurnosPendientes,
+      ...recordatoriosTickets,
+    ];
+  }
+
+  async getRecordatoriosByUser(id: number) {
+    const fechaObjetivo = new Date();
+    fechaObjetivo.setDate(fechaObjetivo.getDate() + 2); // 2 días después
+    const inicioDelDia = new Date(fechaObjetivo);
+    inicioDelDia.setHours(0, 0, 0, 0);
+    const finDelDia = new Date(fechaObjetivo);
+    finDelDia.setHours(23, 59, 59, 999);
+
+    // Si la hora actual ya es mayor al inicio del día dos días después, usamos la hora actual como inicio de la consulta
+    const now = new Date();
+    const inicioConsulta = now > inicioDelDia ? now : inicioDelDia;
+
+    // Obtener turnos en dos días donde el usuario es el paciente
+    const turnosEnDosDias = await this.userRepository.manager
+      .getRepository(Turno)
+      .createQueryBuilder('turno')
+      .leftJoinAndSelect('turno.profesional', 'profesional')
+      .leftJoinAndSelect('turno.paciente', 'paciente')
+      .where('turno.paciente = :id', { id })
+      .andWhere('turno.fechaHora BETWEEN :inicioConsulta AND :finDelDia', {
+        inicioConsulta,
+        finDelDia,
+      })
+      .getMany();
+
+    // Obtener turnos pendientes para el usuario, donde es el paciente
+    const turnosPendientes = await this.userRepository.manager
+      .getRepository(Turno)
+      .createQueryBuilder('turno')
+      .leftJoinAndSelect('turno.profesional', 'profesional')
+      .leftJoinAndSelect('turno.paciente', 'paciente')
+      .where('turno.paciente = :id', { id })
+      .andWhere('turno.estado = :estado', { estado: EstadoTurno.Pendiente })
+      .getMany();
+
+    // Obtener tickets pendientes donde el usuario es el solicitante
+    const ticketsPendientes = await this.userRepository.manager
+      .getRepository(Ticket)
+      .createQueryBuilder('ticket')
+      .leftJoinAndSelect('ticket.receptor', 'receptor')
+      .leftJoinAndSelect('ticket.solicitante', 'solicitante')
+      .where('ticket.solicitante = :id', { id })
+      .andWhere(
+        'ticket.consentimientoReceptor = :aceptado OR ticket.consentimientoReceptor = :pendiente',
+        {
+          aceptado: EstadoConsentimiento.Aceptado,
+          pendiente: EstadoConsentimiento.Pendiente,
+        },
+      )
+      .andWhere(
+        'ticket.consentimientoSolicitante = :aceptado OR ticket.consentimientoSolicitante = :pendiente',
+        {
+          aceptado: EstadoConsentimiento.Aceptado,
+          pendiente: EstadoConsentimiento.Pendiente,
+        },
+      )
+      .andWhere(
+        'ticket.consentimientoUsuario = :aceptado OR ticket.consentimientoUsuario = :pendiente',
+        {
+          aceptado: EstadoConsentimiento.Aceptado,
+          pendiente: EstadoConsentimiento.Pendiente,
+        },
+      )
+      .andWhere('ticket.fechaBaja IS NULL')
+      .getMany();
+
+    const calcularTiempoRestante = (fecha: Date) => {
+      const tiempoRestante = fecha.getTime() - new Date().getTime();
+      const dias = Math.floor(tiempoRestante / (1000 * 60 * 60 * 24));
+      const horas = Math.floor(
+        (tiempoRestante % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+      );
+      const minutos = Math.floor(
+        (tiempoRestante % (1000 * 60 * 60)) / (1000 * 60),
+      );
+      return { dias, horas, minutos };
+    };
+
+    // Formatear los turnos mostrando el nombre del profesional
+    const formatTurno = (turno: Turno) => ({
+      id: turno.id,
+      tipo: 'Turno',
+      fecha: turno.fechaHora,
+      descripcion: `Turno con ${turno.profesional.firstName} ${turno.profesional.lastName} en ${
+        calcularTiempoRestante(turno.fechaHora).dias > 0
+          ? `${calcularTiempoRestante(turno.fechaHora).dias} días, `
+          : ''
+      }${
+        calcularTiempoRestante(turno.fechaHora).horas > 0
+          ? `${calcularTiempoRestante(turno.fechaHora).horas} horas y `
+          : ''
+      }${
+        calcularTiempoRestante(turno.fechaHora).minutos > 0
+          ? `${calcularTiempoRestante(turno.fechaHora).minutos} minutos`
+          : ''
+      }`,
+    });
+
+    // Formatear los tickets mostrando el nombre del receptor (por lo general, el profesional)
+    const formatTicket = (ticket: Ticket) => ({
+      id: ticket.id,
+      tipo: 'Ticket',
+      fecha: ticket.fechaCreacion,
+      descripcion: `Ticket sobre ${ticket.asunto} de ${ticket.receptor.firstName} ${ticket.receptor.lastName} pendiente`,
+    });
+
+    const recordatoriosTurnosEnDosDias = turnosEnDosDias.map((turno) =>
+      formatTurno(turno),
+    );
+    const recordatoriosTurnosPendientes = turnosPendientes.map((turno) =>
+      formatTurno(turno),
     );
     const recordatoriosTickets = ticketsPendientes.map((ticket) =>
       formatTicket(ticket),

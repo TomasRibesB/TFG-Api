@@ -47,6 +47,12 @@ export class UsersController {
     return this.usersService.getRecordatoriosByProfesional(request.user.id);
   }
 
+  @Get('recordatorios')
+  @UseGuards(AuthGuard)
+  getRecordatorios(@Req() request: RequestWithUser) {
+    return this.usersService.getRecordatoriosByUser(request.user.id);
+  }
+
   @Get('profesionales/tickets/:userId')
   @UseGuards(AuthGuard)
   getProfesionalsByUserForTicketsCreation(
