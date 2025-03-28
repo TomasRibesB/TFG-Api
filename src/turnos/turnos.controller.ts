@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Req,
+  Put,
 } from '@nestjs/common';
 import { TurnosService } from './turnos.service';
 import { CreateTurnoDto } from './dto/create-turno.dto';
@@ -35,6 +36,31 @@ export class TurnosController {
   }
 
   @UseGuards(AuthGuard)
+  @Put('asignar/:id')
+  asignarTurnoCliente(
+    @Param('id') id: string,
+    @Req() request: RequestWithUser,
+  ) {
+    console.log('asignarTurnoCliente');
+    return this.turnosService.asignarTurnoForPaciente(
+      parseInt(id),
+      request.user.id,
+    );
+  }
+
+  @UseGuards(AuthGuard)
+  @Put('cancelar/:id')
+  cancelarTurnoCliente(
+    @Param('id') id: string,
+    @Req() request: RequestWithUser,
+  ) {
+    return this.turnosService.cancelarTurnoForPaciente(
+      parseInt(id),
+      request.user.id,
+    );
+  }
+
+  @UseGuards(AuthGuard)
   @Patch()
   update(
     @Body() updateTurnoDto: UpdateTurnoDto,
@@ -43,19 +69,6 @@ export class TurnosController {
     return this.turnosService.update(
       updateTurnoDto.id,
       updateTurnoDto,
-      request.user.id,
-    );
-  }
-
-  @UseGuards(AuthGuard)
-  @Patch('asignar')
-  asignarTurnoCliente(
-    @Param('id') id: string,
-    @Body('idCliente') idCliente: number,
-    @Req() request: RequestWithUser,
-  ) {
-    return this.turnosService.asignarTurnoForPaciente(
-      parseInt(id),
       request.user.id,
     );
   }

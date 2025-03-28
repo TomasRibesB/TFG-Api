@@ -107,7 +107,7 @@ export class UsersService {
         .jpeg({ quality: 80 })
         .toBuffer();
 
-        console.log('compressedImage', compressedImage);
+      console.log('compressedImage', compressedImage);
       return await this.userRepository.update(id, {
         image: compressedImage,
         hasImage: true,
@@ -139,23 +139,34 @@ export class UsersService {
   }
 
   async getProfesionalesByUser(id: number) {
-    const user =
-      (await this.userRepository.find({
-        where: { id },
-        relations: [
-          'profesionales',
-          'profesionales.turnosProfesional',
-          'profesionales.userTipoProfesionales.tipoProfesional',
-        ],
-      })) || [];
+    const userWithProfesionales = await this.userRepository
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.profesionales', 'profesional')
+      .leftJoinAndSelect('profesional.turnosProfesional', 'turno')
+      .leftJoinAndSelect('turno.paciente', 'paciente')
+      .leftJoinAndSelect(
+        'profesional.userTipoProfesionales',
+        'userTipoProfesional',
+      )
+      .leftJoinAndSelect(
+        'userTipoProfesional.tipoProfesional',
+        'tipoProfesional',
+      )
+      .where('user.id = :id', { id })
+      .andWhere(
+        '((turno.estado = :estadoLibre AND paciente.id IS NULL) OR paciente.id = :id)',
+        {
+          estadoLibre: EstadoTurno.Libre,
+          id,
+        },
+      )
+      .andWhere('turno.fechaHora > :fecha', {
+        fecha: new Date(new Date().getTime() - 1000 * 60 * 60),
+      })
+      .orderBy('turno.fechaHora', 'ASC')
+      .getOne();
 
-    const profesionales = user.map((u) => u.profesionales).flat();
-
-    for (const profesional of profesionales) {
-      profesional.turnosProfesional = profesional.turnosProfesional?.filter(
-        (turno) => turno.estado === EstadoTurno.Libre,
-      );
-    }
+    const profesionales = userWithProfesionales?.profesionales || [];
 
     return profesionales;
   }
@@ -256,9 +267,9 @@ export class UsersService {
     // Formatear los resultados a { id, tipo, fecha, descripcion }
     const formatTurno = (turno: Turno, tipo: string) => ({
       id: turno.id,
-      tipo, // 'Turno en dos días' o 'Turno pendiente'
+      tipo,
       fecha: turno.fechaHora,
-      descripcion: `Turno con ${tipo === 'Turno' ? turno.paciente.firstName : turno.profesional.lastName} en ${calcularTiempoRestante(turno.fechaHora).dias > 0 ? `${calcularTiempoRestante(turno.fechaHora).dias} días,` : ''} ${calcularTiempoRestante(turno.fechaHora).horas > 0 ? `${calcularTiempoRestante(turno.fechaHora).horas} horas y` : ''} ${calcularTiempoRestante(turno.fechaHora).minutos > 0 ? `${calcularTiempoRestante(turno.fechaHora).minutos} minutos` : ''}`,
+      descripcion: `Turno con ${turno.paciente.firstName} ${turno.paciente.lastName} en ${calcularTiempoRestante(turno.fechaHora).dias > 0 ? `${calcularTiempoRestante(turno.fechaHora).dias} días,` : ''} ${calcularTiempoRestante(turno.fechaHora).horas > 0 ? `${calcularTiempoRestante(turno.fechaHora).horas} horas y` : ''} ${calcularTiempoRestante(turno.fechaHora).minutos > 0 ? `${calcularTiempoRestante(turno.fechaHora).minutos} minutos` : ''}`,
     });
 
     const formatTicket = (ticket: Ticket) => ({
@@ -365,24 +376,34 @@ export class UsersService {
     };
 
     // Formatear los turnos mostrando el nombre del profesional
-    const formatTurno = (turno: Turno) => ({
-      id: turno.id,
-      tipo: 'Turno',
-      fecha: turno.fechaHora,
-      descripcion: `Turno con ${turno.profesional.firstName} ${turno.profesional.lastName} en ${
-        calcularTiempoRestante(turno.fechaHora).dias > 0
-          ? `${calcularTiempoRestante(turno.fechaHora).dias} días, `
-          : ''
-      }${
-        calcularTiempoRestante(turno.fechaHora).horas > 0
-          ? `${calcularTiempoRestante(turno.fechaHora).horas} horas y `
-          : ''
-      }${
-        calcularTiempoRestante(turno.fechaHora).minutos > 0
-          ? `${calcularTiempoRestante(turno.fechaHora).minutos} minutos`
-          : ''
-      }`,
-    });
+    const formatTurno = (turno: Turno) => {
+      if (turno.estado !== EstadoTurno.Confirmado || !turno.fechaHora) {
+        return {
+          id: turno.id,
+          tipo: 'Turno',
+          fecha: turno.fechaHora,
+          descripcion: `Turno con ${turno.profesional.firstName} ${turno.profesional.lastName} en estado ${turno.estado}`,
+        };
+      }
+      return {
+        id: turno.id,
+        tipo: 'Turno',
+        fecha: turno.fechaHora,
+        descripcion: `Turno con ${turno.profesional.firstName} ${turno.profesional.lastName} en ${
+          calcularTiempoRestante(turno.fechaHora).dias > 0
+            ? `${calcularTiempoRestante(turno.fechaHora).dias} días, `
+            : ''
+        }${
+          calcularTiempoRestante(turno.fechaHora).horas > 0
+            ? `${calcularTiempoRestante(turno.fechaHora).horas} horas y `
+            : ''
+        }${
+          calcularTiempoRestante(turno.fechaHora).minutos > 0
+            ? `${calcularTiempoRestante(turno.fechaHora).minutos} minutos`
+            : ''
+        }`,
+      };
+    };
 
     // Formatear los tickets mostrando el nombre del receptor (por lo general, el profesional)
     const formatTicket = (ticket: Ticket) => ({

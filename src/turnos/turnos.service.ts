@@ -2,8 +2,10 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { CreateTurnoDto } from './dto/create-turno.dto';
 import { UpdateTurnoDto } from './dto/update-turno.dto';
 import { Turno } from './entities/turno.entity';
-import { IsNull, Repository } from 'typeorm';
+import { IsNull, MoreThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EstadoTurno } from './entities/estadosTurnos.enum';
+import { Not, In } from 'typeorm';
 
 @Injectable()
 export class TurnosService {
@@ -12,13 +14,16 @@ export class TurnosService {
     private turnoRepository: Repository<Turno>,
   ) {}
   async findByUser(id: number) {
+    const unaHoraAtras = new Date(Date.now() - 1000 * 60 * 60);
     return this.turnoRepository.find({
       where: [
         {
           paciente: { id },
+          fechaHora: MoreThan(unaHoraAtras),
         },
         {
           profesional: { id },
+          fechaHora: MoreThan(unaHoraAtras),
         },
       ],
       relations: ['profesional', 'paciente'],
@@ -32,10 +37,12 @@ export class TurnosService {
       where: {
         fechaHora: new Date(createTurnoDto.fechaHora),
         profesional: { id: profesionalId },
+        estado: Not(In([EstadoTurno.Cancelado])),
       },
     });
     console.log(turnos);
     if (turnos.length > 0) {
+      console.log('Ya existe un turno en la misma fecha y hora');
       throw new UnauthorizedException(
         'Ya existe un turno en la misma fecha y hora',
       );
@@ -112,7 +119,32 @@ export class TurnosService {
   }
 
   async asignarTurnoForPaciente(id: number, pacienteId: number) {
-    return this.turnoRepository.update(id, { paciente: { id: pacienteId } });
+    // Verifico que el turno esté libre
+    const turno = await this.turnoRepository.findOne({
+      where: { id, paciente: IsNull() },
+    });
+    if (!turno) {
+      return false;
+    }
+    const result = await this.turnoRepository.update(id, {
+      paciente: { id: pacienteId },
+      estado: EstadoTurno.Pendiente,
+    });
+    return result.affected && result.affected > 0;
+  }
+
+  async cancelarTurnoForPaciente(id: number, pacienteId: number) {
+    // Verifico que el turno esté asignado al paciente
+    const turno = await this.turnoRepository.findOne({
+      where: { id, paciente: { id: pacienteId } },
+    });
+    if (!turno) {
+      return false;
+    }
+    const result = await this.turnoRepository.update(id, {
+      estado: EstadoTurno.Cancelado,
+    });
+    return result.affected && result.affected > 0;
   }
 
   async remove(id: number, profesionalId: number) {
