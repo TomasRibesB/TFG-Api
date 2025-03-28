@@ -111,6 +111,15 @@ export class AuthService {
     return payload;
   }
 
+  formatNombresPropios(nombres: string): string {
+    return nombres
+      .split(' ')
+      .map((nombre) => nombre.charAt(0).toUpperCase() + nombre.slice(1))
+      .join(' ')
+      .trim();
+    // Capitaliza cada nombre propio
+  }
+
   async register(registerDto: RegisterDto) {
     const user = await this.usersService.findOneByEmail(registerDto.email);
     const userByDni = await this.usersService.findOneByDni(registerDto.dni);
@@ -120,6 +129,9 @@ export class AuthService {
     if (userByDni) {
       throw new BadRequestException('El DNI ya está registrado');
     }
+
+    registerDto.firstName = this.formatNombresPropios(registerDto.firstName);
+    registerDto.lastName = this.formatNombresPropios(registerDto.lastName);
     const plainPassword = registerDto.password;
     await this.usersService.create(registerDto);
     console.log('Usuario creado', registerDto.email, plainPassword);
@@ -135,6 +147,8 @@ export class AuthService {
     if (userByDni) {
       throw new BadRequestException('El DNI ya está registrado');
     }
+    registerDto.firstName = this.formatNombresPropios(registerDto.firstName);
+    registerDto.lastName = this.formatNombresPropios(registerDto.lastName);
     const plainPassword = registerDto.password;
     const createdUser = await this.usersService.create(registerDto);
 
