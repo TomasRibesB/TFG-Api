@@ -12,12 +12,11 @@ export class CreateRoutineDto {
   @IsString()
   @IsNotEmpty()
   @Transform(({ value }) => value.toUpperCase())
-  @MaxLength(50)
+  @MaxLength(100)
   name: string;
 
   @IsString()
   @IsOptional()
-  @MaxLength(300)
   description?: string;
 
   @IsNumber()

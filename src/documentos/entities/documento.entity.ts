@@ -21,7 +21,7 @@ export class Documento {
   @Column({ length: 100, nullable: false })
   titulo: string;
 
-  @Column({ nullable: false })
+  @Column({ type: 'text', nullable: false })
   descripcion: string;
 
   @Column({ type: 'longblob', nullable: true, select: false })

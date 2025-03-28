@@ -12,12 +12,11 @@ export class UpdateRoutineDto {
     @IsOptional()
     @IsString()
     @Transform(({ value }) => value.toUpperCase())
-    @MaxLength(50)
+    @MaxLength(100)
     name?: string;
 
     @IsOptional()
     @IsString()
-    @MaxLength(300)
     description?: string;
 
     @IsNumber()

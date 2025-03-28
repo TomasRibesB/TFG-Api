@@ -142,7 +142,16 @@ export class UsersService {
     const userWithProfesionales = await this.userRepository
       .createQueryBuilder('user')
       .leftJoinAndSelect('user.profesionales', 'profesional')
-      .leftJoinAndSelect('profesional.turnosProfesional', 'turno')
+      .leftJoinAndSelect(
+        'profesional.turnosProfesional',
+        'turno',
+        'turno.fechaHora > :fecha AND ((turno.estado = :estadoLibre AND turno.paciente IS NULL) OR turno.paciente.id = :id)',
+        {
+          fecha: new Date(new Date().getTime() - 1000 * 60 * 60),
+          estadoLibre: EstadoTurno.Libre,
+          id,
+        },
+      )
       .leftJoinAndSelect('turno.paciente', 'paciente')
       .leftJoinAndSelect(
         'profesional.userTipoProfesionales',
@@ -153,16 +162,6 @@ export class UsersService {
         'tipoProfesional',
       )
       .where('user.id = :id', { id })
-      .andWhere(
-        '((turno.estado = :estadoLibre AND paciente.id IS NULL) OR paciente.id = :id)',
-        {
-          estadoLibre: EstadoTurno.Libre,
-          id,
-        },
-      )
-      .andWhere('turno.fechaHora > :fecha', {
-        fecha: new Date(new Date().getTime() - 1000 * 60 * 60),
-      })
       .orderBy('turno.fechaHora', 'ASC')
       .getOne();
 

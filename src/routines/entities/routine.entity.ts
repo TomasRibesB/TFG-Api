@@ -15,10 +15,10 @@ export class Routine {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ length: 50, nullable: false })
+  @Column({ length: 100, nullable: false })
   name: string;
 
-  @Column({ length: 300, nullable: true })
+  @Column({ type: 'text', nullable: true })
   description?: string;
 
   @OneToMany(

@@ -36,7 +36,7 @@ export class AuthService {
 
     if (!isPasswordValid) {
       console.log('Password incorrecto');
-      throw new UnauthorizedException('Email o contraseña incorrectos');
+      return false;
     }
 
     let payload: any = {
