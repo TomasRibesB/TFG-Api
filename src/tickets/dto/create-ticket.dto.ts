@@ -2,12 +2,10 @@ import {
   IsNotEmpty,
   IsString,
   IsDateString,
-  IsEnum,
   IsObject,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { EstadoConsentimiento } from '../entities/estadoConsentimiento.enum';
 
 class UserIdDto {
   @IsNotEmpty()
@@ -44,16 +42,4 @@ export class CreateTicketDto {
   @ValidateNested()
   @Type(() => UserIdDto)
   usuario: UserIdDto;
-
-  @IsNotEmpty()
-  @IsEnum(EstadoConsentimiento)
-  consentimientoUsuario: EstadoConsentimiento;
-
-  @IsNotEmpty()
-  @IsEnum(EstadoConsentimiento)
-  consentimientoReceptor: EstadoConsentimiento;
-
-  @IsNotEmpty()
-  @IsEnum(EstadoConsentimiento)
-  consentimientoSolicitante: EstadoConsentimiento;
 }

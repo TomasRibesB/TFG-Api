@@ -105,13 +105,16 @@ export class TicketsService {
     ticket.asunto = createTicketDto.asunto;
     ticket.descripcion = createTicketDto.descripcion;
     ticket.fechaCreacion = new Date(createTicketDto.fechaCreacion);
-    ticket.solicitante = { id: createTicketDto.solicitante.id } as User;
+    ticket.solicitante = { id: userId } as User;
     ticket.receptor = { id: createTicketDto.receptor.id } as User;
     ticket.usuario = { id: createTicketDto.usuario.id } as User;
-    ticket.consentimientoUsuario = createTicketDto.consentimientoUsuario;
-    ticket.consentimientoReceptor = createTicketDto.consentimientoReceptor;
-    ticket.consentimientoSolicitante =
-      createTicketDto.consentimientoSolicitante;
+    if (ticket.usuario.id === userId) {
+      ticket.consentimientoUsuario = EstadoConsentimiento.Aceptado;
+    } else {
+      ticket.consentimientoUsuario = EstadoConsentimiento.Pendiente;
+    }
+    ticket.consentimientoReceptor = EstadoConsentimiento.Pendiente;
+    ticket.consentimientoSolicitante = EstadoConsentimiento.Aceptado;
 
     if (ticket.solicitante.id !== userId) {
       throw new UnauthorizedException('Usuario no puede crear ticket');
