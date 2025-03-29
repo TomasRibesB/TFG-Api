@@ -67,7 +67,7 @@ export class PlanNutricionalService {
 
   findByUser(id: number) {
     return this.planNutricionalRepository.find({
-      where: { paciente: { id }, fechaBaja: null },
+      where: { paciente: { id }, fechaBaja: IsNull() },
       relations: ['nutricionista', 'visibilidad'],
     });
   }

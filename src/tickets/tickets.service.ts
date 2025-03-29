@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, In } from 'typeorm';
+import { Repository, In, IsNull } from 'typeorm';
 import { Ticket } from './entities/ticket.entity';
 import { EstadoConsentimiento } from './entities/estadoConsentimiento.enum';
 import { CreateTicketDto } from './dto/create-ticket.dto';
@@ -26,7 +26,7 @@ export class TicketsService {
             EstadoConsentimiento.Pendiente,
           ]),
           usuario: { id },
-          fechaBaja: null,
+          fechaBaja: IsNull(),
         },
         {
           consentimientoUsuario: In([
@@ -38,7 +38,7 @@ export class TicketsService {
             EstadoConsentimiento.Pendiente,
           ]),
           solicitante: { id },
-          fechaBaja: null,
+          fechaBaja: IsNull(),
         },
         {
           consentimientoUsuario: In([
@@ -50,7 +50,7 @@ export class TicketsService {
             EstadoConsentimiento.Pendiente,
           ]),
           receptor: { id },
-          fechaBaja: null,
+          fechaBaja: IsNull(),
         },
       ],
       relations: ['receptor', 'solicitante', 'usuario'],
@@ -162,5 +162,17 @@ export class TicketsService {
     const newTicket = await this.ticketRepository.save(ticket);
 
     return await this.findTicketById(newTicket.id, userId);
+  }
+
+  async bajaTicket(userId: number, ticketId: number): Promise<Ticket> {
+    console.log('bajaTicket', userId, ticketId);
+    const ticket = await this.findTicketById(ticketId, userId);
+
+    if (ticket.fechaBaja) {
+      ticket.fechaBaja = null;
+    } else {
+      ticket.fechaBaja = new Date();
+    }
+    return this.ticketRepository.save(ticket);
   }
 }

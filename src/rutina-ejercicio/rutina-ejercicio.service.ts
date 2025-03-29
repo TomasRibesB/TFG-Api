@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { CreateRutinaEjercicioDto } from './dto/create-rutina-ejercicio.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import { RutinaEjercicio } from './entities/rutina-ejercicio.entity';
 import { Ejercicio } from 'src/ejercicios/entities/ejercicio.entity';
 import { Routine } from 'src/routines/entities/routine.entity';
@@ -53,13 +53,13 @@ export class RutinaEjercicioService {
 
   async findOne(id: number) {
     return this.ejercicioRegistroRepository.findOne({
-      where: { id, fechaBaja: null },
+      where: { id, fechaBaja: IsNull() },
     });
   }
 
   async findLastRutinaEjercicio(id: number) {
     return this.ejercicioRegistroRepository.findOne({
-      where: { id, fechaBaja: null },
+      where: { id, fechaBaja: IsNull() },
       order: { fecha: 'DESC' },
       relations: ['routine', 'ejercicio'],
     });
@@ -68,7 +68,7 @@ export class RutinaEjercicioService {
   async findRutinaEjercicio(rid: number, eid: number) {
     console.log(rid, eid);
     return this.ejercicioRegistroRepository.find({
-      where: { routine: { id: rid }, ejercicio: { id: eid }, fechaBaja: null },
+      where: { routine: { id: rid }, ejercicio: { id: eid }, fechaBaja: IsNull() },
       relations: ['routine', 'ejercicio'],
       order: { id: 'DESC' },
     });

@@ -7,6 +7,7 @@ import {
   UseGuards,
   Put,
   Post,
+  Delete,
 } from '@nestjs/common';
 import { TicketsService } from './tickets.service';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
@@ -49,7 +50,16 @@ export class TicketsController {
 
   @UseGuards(AuthGuard)
   @Post()
-  create(@Req() request: RequestWithUser, @Body('ticket') createTicketDto: CreateTicketDto) {
+  create(
+    @Req() request: RequestWithUser,
+    @Body('ticket') createTicketDto: CreateTicketDto,
+  ) {
     return this.ticketsService.createTicket(request.user.id, createTicketDto);
+  }
+
+  @UseGuards(AuthGuard)
+  @Delete(':id')
+  delete(@Param('id') id: string, @Req() request: RequestWithUser) {
+    return this.ticketsService.bajaTicket(request.user.id, +id);
   }
 }
