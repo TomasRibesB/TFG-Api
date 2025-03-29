@@ -139,11 +139,13 @@ export class TicketsService {
           solicitante: { id: ticket.solicitante.id },
           receptor: { id: ticket.receptor.id },
           usuario: { id: ticket.usuario.id },
+          fechaBaja: IsNull(),
         },
         {
           solicitante: { id: ticket.receptor.id },
           receptor: { id: ticket.solicitante.id },
           usuario: { id: ticket.usuario.id },
+          fechaBaja: IsNull(),
         },
       ],
     });

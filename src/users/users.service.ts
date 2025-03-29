@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
-import { In, Repository } from 'typeorm';
+import { Brackets, In, Repository } from 'typeorm';
 import * as bcryptjs from 'bcryptjs';
 import { EstadoTurno } from 'src/turnos/entities/estadosTurnos.enum';
 import { Ticket } from 'src/tickets/entities/ticket.entity';
@@ -339,25 +339,31 @@ export class UsersService {
       .leftJoinAndSelect('ticket.solicitante', 'solicitante')
       .where('ticket.solicitante = :id', { id })
       .andWhere(
-        'ticket.consentimientoReceptor = :aceptado OR ticket.consentimientoReceptor = :pendiente',
-        {
-          aceptado: EstadoConsentimiento.Aceptado,
-          pendiente: EstadoConsentimiento.Pendiente,
-        },
+        new Brackets((qb) => {
+          qb.where('ticket.consentimientoReceptor = :aceptado', {
+            aceptado: EstadoConsentimiento.Aceptado,
+          }).orWhere('ticket.consentimientoReceptor = :pendiente', {
+            pendiente: EstadoConsentimiento.Pendiente,
+          });
+        }),
       )
       .andWhere(
-        'ticket.consentimientoSolicitante = :aceptado OR ticket.consentimientoSolicitante = :pendiente',
-        {
-          aceptado: EstadoConsentimiento.Aceptado,
-          pendiente: EstadoConsentimiento.Pendiente,
-        },
+        new Brackets((qb) => {
+          qb.where('ticket.consentimientoSolicitante = :aceptado', {
+            aceptado: EstadoConsentimiento.Aceptado,
+          }).orWhere('ticket.consentimientoSolicitante = :pendiente', {
+            pendiente: EstadoConsentimiento.Pendiente,
+          });
+        }),
       )
       .andWhere(
-        'ticket.consentimientoUsuario = :aceptado OR ticket.consentimientoUsuario = :pendiente',
-        {
-          aceptado: EstadoConsentimiento.Aceptado,
-          pendiente: EstadoConsentimiento.Pendiente,
-        },
+        new Brackets((qb) => {
+          qb.where('ticket.consentimientoUsuario = :aceptado', {
+            aceptado: EstadoConsentimiento.Aceptado,
+          }).orWhere('ticket.consentimientoUsuario = :pendiente', {
+            pendiente: EstadoConsentimiento.Pendiente,
+          });
+        }),
       )
       .andWhere('ticket.fechaBaja IS NULL')
       .getMany();
