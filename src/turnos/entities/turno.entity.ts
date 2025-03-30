@@ -15,10 +15,7 @@ export class Turno {
   estado: EstadoTurno;
 
   @Column({ nullable: true })
-  notificadoPaciente: Date | null;
-
-  @Column({ nullable: true })
-  notificadoProfesional: Date | null;
+  notificado: Date | null;
 
   @ManyToOne(() => User, (user) => user.turnosPaciente)
   paciente: User;

@@ -9,12 +9,14 @@ import { Ticket } from './entities/ticket.entity';
 import { EstadoConsentimiento } from './entities/estadoConsentimiento.enum';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { User } from 'src/users/entities/user.entity';
+import { TicketsEmailNotificationService } from './tickets.email.notification.service';
 
 @Injectable()
 export class TicketsService {
   constructor(
     @InjectRepository(Ticket)
     private ticketRepository: Repository<Ticket>,
+    private ticketsEmailNotificationService: TicketsEmailNotificationService,
   ) {}
 
   async findTicketsByUser(id: number) {
@@ -96,6 +98,26 @@ export class TicketsService {
       ticket.consentimientoSolicitante = estadoConsentimiento;
     }
 
+    if (
+      ticket.consentimientoUsuario === EstadoConsentimiento.Aceptado &&
+      ticket.consentimientoReceptor === EstadoConsentimiento.Aceptado &&
+      ticket.consentimientoSolicitante === EstadoConsentimiento.Aceptado
+    ) {
+      this.ticketsEmailNotificationService.enviarNotificacionTicketAprobado(
+        ticket,
+      );
+    }
+    if (
+      ticket.consentimientoUsuario === EstadoConsentimiento.Rechazado ||
+      ticket.consentimientoReceptor === EstadoConsentimiento.Rechazado ||
+      ticket.consentimientoSolicitante === EstadoConsentimiento.Rechazado
+    ) {
+      this.ticketsEmailNotificationService.enviarNotificacionTicketRechazado(
+        ticket,
+      );
+      ticket.fechaBaja = new Date();
+    }
+
     return this.ticketRepository.save(ticket);
   }
 
@@ -154,16 +176,18 @@ export class TicketsService {
       throw new UnauthorizedException('Ticket ya existe');
     }
 
-    // Se fuerza el consentimiento del solicitante a "Aceptado"
-    ticket.consentimientoSolicitante = EstadoConsentimiento.Aceptado;
-
-    if (ticket.usuario.id === userId) {
-      ticket.consentimientoUsuario = EstadoConsentimiento.Aceptado;
-    }
-
     const newTicket = await this.ticketRepository.save(ticket);
 
-    return await this.findTicketById(newTicket.id, userId);
+    const ticketresult: Ticket = await this.findTicketById(
+      newTicket.id,
+      userId,
+    );
+
+    this.ticketsEmailNotificationService.enviarNotificacionTicketPendiente(
+      ticketresult,
+    );
+
+    return ticketresult;
   }
 
   async bajaTicket(userId: number, ticketId: number): Promise<Ticket> {

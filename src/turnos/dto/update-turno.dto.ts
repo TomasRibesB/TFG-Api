@@ -1,7 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateTurnoDto } from './create-turno.dto';
 import {
-  IsDateString,
   IsEnum,
   IsInt,
   IsNotEmpty,
@@ -17,12 +16,4 @@ export class UpdateTurnoDto extends PartialType(CreateTurnoDto) {
   @IsOptional()
   @IsEnum(EstadoTurno)
   estado?: EstadoTurno;
-
-  @IsOptional()
-  @IsDateString()
-  notificadoPaciente?: Date | null;
-
-  @IsOptional()
-  @IsDateString()
-  notificadoProfesional?: Date | null;
 }

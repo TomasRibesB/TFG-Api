@@ -6,12 +6,14 @@ import { IsNull, MoreThan, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { EstadoTurno } from './entities/estadosTurnos.enum';
 import { Not, In } from 'typeorm';
+import { TurnosEmailNotificationService } from './turnos.email.notification.service';
 
 @Injectable()
 export class TurnosService {
   constructor(
     @InjectRepository(Turno)
     private turnoRepository: Repository<Turno>,
+    private turnosEmailNotificationService: TurnosEmailNotificationService,
   ) {}
   async findByUser(id: number) {
     const unaHoraAtras = new Date(Date.now() - 1000 * 60 * 60);
@@ -28,6 +30,13 @@ export class TurnosService {
       ],
       relations: ['profesional', 'paciente'],
       order: { fechaHora: 'ASC' },
+    });
+  }
+
+  async findById(id: number) {
+    return this.turnoRepository.findOne({
+      where: { id },
+      relations: ['profesional', 'paciente'],
     });
   }
 
@@ -115,6 +124,19 @@ export class TurnosService {
         : null;
     }
 
+    const responseTurno: Turno = await this.findById(id);
+
+    if (updatedTurno.estado && updatedTurno.estado !== EstadoTurno.Confirmado) {
+      this.turnosEmailNotificationService.enviarNotificacionTurnoReservado(
+        responseTurno,
+      );
+    }
+    if (updatedTurno.estado && updatedTurno.estado === EstadoTurno.Cancelado) {
+      this.turnosEmailNotificationService.enviarNotificacionTurnoCancelado(
+        responseTurno,
+      );
+    }
+
     return this.turnoRepository.save(updatedTurno);
   }
 
@@ -130,6 +152,14 @@ export class TurnosService {
       paciente: { id: pacienteId },
       estado: EstadoTurno.Pendiente,
     });
+
+    const turnoResult: Turno = await this.findById(id);
+    if (turnoResult) {
+      this.turnosEmailNotificationService.enviarNotificacionTurnoReservado(
+        turnoResult,
+      );
+    }
+
     return result.affected && result.affected > 0;
   }
 
@@ -144,6 +174,13 @@ export class TurnosService {
     const result = await this.turnoRepository.update(id, {
       estado: EstadoTurno.Cancelado,
     });
+
+    const turnoResult: Turno = await this.findById(id);
+    if (turnoResult) {
+      this.turnosEmailNotificationService.enviarNotificacionTurnoCancelado(
+        turnoResult,
+      );
+    }
     return result.affected && result.affected > 0;
   }
 
