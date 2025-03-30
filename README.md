@@ -97,3 +97,14 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+Se debe crear los archivos .env dev y prod:
+DB_HOST=
+DB_PORT=
+DB_USER=
+DB_PASS=
+DB_NAME=
+EMAIL_USER=
+EMAIL_PASS=
+EMAIL_HOST=
+JWT_SECRET=
