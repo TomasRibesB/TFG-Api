@@ -3,9 +3,6 @@
 /node_modules
 /build
 
-# todos los archivos de variables de entorno ejemplo dev.env y prod.env
-*.env
-
 # Logs
 logs
 *.log

@@ -3,7 +3,6 @@ import { ChatService } from './chat.service';
 import { OnModuleInit } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
-import { jwtContants } from 'src/auth/constants/jwt.constant';
 
 @WebSocketGateway({
   cors: {
@@ -32,7 +31,7 @@ export class ChatGateway implements OnModuleInit {
       console.log('Token: ', token);
       try {
         const payload = await this.jwtService.verifyAsync(token, {
-          secret: jwtContants.secret,
+          secret: process.env.JWT_SECRET,
         });
         // Guardamos la info del usuario en el socket
         socket.data.user = payload;
