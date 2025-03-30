@@ -199,6 +199,13 @@ export class TicketsService {
     } else {
       ticket.fechaBaja = new Date();
     }
-    return this.ticketRepository.save(ticket);
+
+    const result = await this.ticketRepository.save(ticket);
+
+    await this.ticketsEmailNotificationService.enviarNotificacionTicketArchivado(
+      ticket,
+    );
+
+    return result;
   }
 }

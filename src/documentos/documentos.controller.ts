@@ -114,8 +114,16 @@ export class DocumentosController {
 
   @UseGuards(AuthGuard)
   @Get('archivo/:id')
-  async download(@Param('id') id: string, @Res() res: ExpressResponse) {
-    const documento = await this.documentosService.findOneWithArchivo(+id);
+  async download(
+    @Param('id') id: string,
+    @Res() res: ExpressResponse,
+    @Req() request: RequestWithUser,
+  ) {
+    console.log('Descargando archivo con ID:', id);
+    const documento = await this.documentosService.findOneWithArchivo(
+      +id,
+      request.user.id,
+    );
     if (!documento || !documento.archivo) {
       return res.status(404).send('Archivo no encontrado');
     }

@@ -119,10 +119,34 @@ export class DocumentosService {
   }
 
   async findByUser(id: number) {
-    return this.documentoRepository.find({
-      where: { usuario: { id }, fechaBaja: IsNull() },
-      relations: ['profesional', 'visibilidad'],
-    });
+    const qb = this.documentoRepository
+      .createQueryBuilder('doc')
+      .select([
+        'doc.id',
+        'doc.tipo',
+        'doc.titulo',
+        'doc.descripcion',
+        'doc.fechaSubida',
+        'doc.fechaBaja',
+        'doc.nombreProfesional',
+        'doc.apellidoProfesional',
+        'doc.dniProfesional',
+        'doc.emailProfesional',
+      ])
+      .addSelect(
+        `CASE WHEN doc.archivo IS NOT NULL THEN true ELSE false END`,
+        'hasArchivo',
+      )
+      .leftJoinAndSelect('doc.profesional', 'profesional')
+      .leftJoinAndSelect('doc.visibilidad', 'visibilidad')
+      .where('doc.usuario = :id', { id })
+      .andWhere('doc.fechaBaja IS NULL');
+
+    const { raw, entities } = await qb.getRawAndEntities();
+    return entities.map((doc, i) => ({
+      ...doc,
+      hasArchivo: raw[i].hasArchivo,
+    }));
   }
 
   async findDocumentsFoyProfesionalByUser(
@@ -174,11 +198,19 @@ export class DocumentosService {
     return await this.documentoRepository.save(documento);
   }
 
-  async findOneWithArchivo(id: number): Promise<Documento> {
+  async findOneWithArchivo(id: number, userId: number): Promise<Documento> {
+    console.log('findOneWithArchivo', id, userId);
     const documento = await this.documentoRepository
       .createQueryBuilder('documento')
       .addSelect('documento.archivo')
+      .leftJoin('documento.profesional', 'profesional')
+      .leftJoin('documento.visibilidad', 'visibilidad')
+      .leftJoin('documento.usuario', 'usuario')
       .where('documento.id = :id', { id })
+      .andWhere('documento.fechaBaja IS NULL')
+      .orWhere('visibilidad.id = :userId', { userId })
+      .orWhere('usuario.id = :userId', { userId })
+      .orWhere('profesional.id = :userId', { userId })
       .getOne();
 
     if (!documento) {

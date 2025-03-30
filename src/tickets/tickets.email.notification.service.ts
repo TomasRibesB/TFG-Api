@@ -293,4 +293,96 @@ export class TicketsEmailNotificationService {
       }
     }
   }
+
+  async enviarNotificacionTicketArchivado(ticket: Ticket): Promise<void> {
+    const logoUrl = this.getLogoUrl();
+    // Para ticket archivado se notifica a solicitante y receptor.
+    const destinatarios: string[] = [];
+    if (ticket.solicitante?.email) {
+      destinatarios.push(ticket.solicitante.email);
+    }
+    if (ticket.receptor?.email) {
+      destinatarios.push(ticket.receptor.email);
+    }
+
+    const participantes = [
+      `${ticket.receptor?.firstName} ${ticket.receptor?.lastName}`,
+      `${ticket.solicitante?.firstName} ${ticket.solicitante?.lastName}`,
+    ];
+
+    if (
+      ticket.usuario?.id !== ticket.receptor?.id &&
+      ticket.usuario?.id !== ticket.solicitante?.id
+    ) {
+      destinatarios.push(ticket.usuario.email);
+      participantes.push(
+        `${ticket.usuario.firstName} ${ticket.usuario.lastName}`,
+      );
+    }
+
+    const subject = 'Ticket Archivado';
+    const html = `
+      <!DOCTYPE html>
+      <html lang="es">
+      <head>
+        <meta charset="UTF-8">
+        <title>Ticket Archivado - Nexo Health</title>
+      </head>
+      <body style="margin:0; padding:0; background-color:#f4f4f4;">
+        <table style="width:100%; border-collapse:collapse;">
+          <tr>
+            <td align="center" style="padding:20px;">
+              <table style="width:600px; background:#ffffff; border:1px solid #cccccc;">
+                <tr>
+                  <td style="padding:20px; background-color:rgb(120,69,172);">
+                    <table style="width:100%;">
+                      <tr>
+                        <td style="width:50px;">
+                          <img src="${logoUrl}" alt="Logo Nexo Health" width="50" style="display:block; border-radius:50px;">
+                        </td>
+                        <td style="padding-left:10px; color:#ffffff; font-family:Arial, sans-serif; font-size:24px;">
+                          Nexo Health
+                        </td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:25px;">
+                    <h2 style="font-family:Arial, sans-serif; color:#333;">Ticket Archivado</h2>
+                    <p style="font-family:Arial, sans-serif; color:#555;">
+                      El ticket con ${participantes.join(
+                        ', ',
+                      )} ha sido archivado. Ya no será visible en la sección de tickets.
+                    </p>
+                    <p style="font-family:Arial, sans-serif; color:#555;">
+                      Si tiene dudas, contacte con el soporte.
+                    </p>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:20px; background-color:rgb(120,69,172); text-align:center; font-family:Arial, sans-serif; color:#fff; font-size:12px;">
+                    &copy; ${new Date().getFullYear()} Nexo Health. Todos los derechos reservados.
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+      </body>
+      </html>
+    `;
+    for (const email of destinatarios) {
+      try {
+        await this.emailService.sendEmail(email, subject, html);
+        this.logger.log(
+          `Notificación de ticket archivado enviada a ${email} para ticket ${ticket.id}`,
+        );
+      } catch (error) {
+        this.logger.error(
+          `Error enviando notificación de ticket archivado para ticket ${ticket.id} a ${email}: ${error.message}`,
+        );
+      }
+    }
+  }
 }

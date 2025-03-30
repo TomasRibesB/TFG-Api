@@ -61,7 +61,4 @@ export class Ticket {
 
   @OneToMany(() => TicketMensaje, (mensaje) => mensaje.ticket)
   mensajes: TicketMensaje[];
-
-  @Column({ nullable: true })
-  notificado: Date | null;
 }
