@@ -13,6 +13,7 @@ import { DocumentosModule } from './documentos/documentos.module';
 import { ChatModule } from './tickets/chat/chat.module';
 import { LoggerMiddleware } from './middlewares/logger/logger.middleware';
 import { TipoProfesionalModule } from './tipo-profesional/tipo-profesional.module';
+import { EmailModule } from './email/email.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -38,6 +39,7 @@ import { TipoProfesionalModule } from './tipo-profesional/tipo-profesional.modul
     DocumentosModule,
     ChatModule,
     TipoProfesionalModule,
+    EmailModule,
   ],
   controllers: [],
   providers: [],
