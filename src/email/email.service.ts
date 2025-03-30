@@ -8,12 +8,12 @@ export class EmailService {
 
   constructor() {
     this.transporter = nodemailer.createTransport({
-      host: 'smtp.hostinger.com',
+      host: process.env.EMAIL_HOST,
       port: 465,
       secure: true,
       auth: {
-        user: 'tuemail@gmail.com',
-        pass: 'tu_contraseña_o_app_password',
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
   }
