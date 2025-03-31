@@ -14,6 +14,7 @@ import { PermisoDocumento } from './entities/permisoDocumento.entity';
 import * as sharp from 'sharp';
 import { User } from 'src/users/entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
+import { DocumentosEmailNotificationService } from './documentos.email.notification.service';
 
 @Injectable()
 export class DocumentosService {
@@ -26,6 +27,7 @@ export class DocumentosService {
     private permisoDocumentoRepository: Repository<PermisoDocumento>,
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    private readonly documentosEmailNotificationService: DocumentosEmailNotificationService,
   ) {}
 
   async create(createDocumentoDto: CreateDocumentoDto): Promise<Documento> {
@@ -276,7 +278,19 @@ export class DocumentosService {
       usuario: { id: permisoDocumento.usuario.id },
       tipoProfesional: { id: createDocumentoDto.tipoProfesionalId },
     });
-    return await this.documentoRepository.save(newDocumento);
+    const result = await this.documentoRepository.save(newDocumento);
+
+    const documentoResult: Documento = await this.documentoRepository.findOne({
+      where: { id: result.id },
+      relations: ['usuario'],
+    });
+
+    // Enviar notificación por correo electrónico
+    await this.documentosEmailNotificationService.enviarNotificacionArchivoProfesionalExterno(
+      documentoResult,
+    );
+
+    return result;
   }
 
   async uploadDocumentoArchivoByNoUser(
@@ -322,7 +336,10 @@ export class DocumentosService {
     }
 
     // Actualizar directamente en la base de datos evitando volver a insertar
-    await this.documentoRepository.update(id, { archivo: processedBuffer, hasArchivo: true });
+    await this.documentoRepository.update(id, {
+      archivo: processedBuffer,
+      hasArchivo: true,
+    });
     return await this.documentoRepository.findOne({ where: { id } });
   }
 }
