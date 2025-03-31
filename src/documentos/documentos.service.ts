@@ -97,7 +97,11 @@ export class DocumentosService {
     }
 
     // Actualizar directamente en la base de datos evitando volver a insertar
-    await this.documentoRepository.update(id, { archivo: processedBuffer });
+
+    await this.documentoRepository.update(id, {
+      archivo: processedBuffer,
+      hasArchivo: true,
+    });
     return await this.documentoRepository.findOne({ where: { id } });
   }
 
@@ -119,34 +123,10 @@ export class DocumentosService {
   }
 
   async findByUser(id: number) {
-    const qb = this.documentoRepository
-      .createQueryBuilder('doc')
-      .select([
-        'doc.id',
-        'doc.tipo',
-        'doc.titulo',
-        'doc.descripcion',
-        'doc.fechaSubida',
-        'doc.fechaBaja',
-        'doc.nombreProfesional',
-        'doc.apellidoProfesional',
-        'doc.dniProfesional',
-        'doc.emailProfesional',
-      ])
-      .addSelect(
-        `CASE WHEN doc.archivo IS NOT NULL THEN true ELSE false END`,
-        'hasArchivo',
-      )
-      .leftJoinAndSelect('doc.profesional', 'profesional')
-      .leftJoinAndSelect('doc.visibilidad', 'visibilidad')
-      .where('doc.usuario = :id', { id })
-      .andWhere('doc.fechaBaja IS NULL');
-
-    const { raw, entities } = await qb.getRawAndEntities();
-    return entities.map((doc, i) => ({
-      ...doc,
-      hasArchivo: raw[i].hasArchivo,
-    }));
+    return this.documentoRepository.find({
+      where: { usuario: { id }, fechaBaja: IsNull() },
+      relations: ['profesional', 'visibilidad'],
+    });
   }
 
   async findDocumentsFoyProfesionalByUser(
@@ -342,7 +322,7 @@ export class DocumentosService {
     }
 
     // Actualizar directamente en la base de datos evitando volver a insertar
-    await this.documentoRepository.update(id, { archivo: processedBuffer });
+    await this.documentoRepository.update(id, { archivo: processedBuffer, hasArchivo: true });
     return await this.documentoRepository.findOne({ where: { id } });
   }
 }

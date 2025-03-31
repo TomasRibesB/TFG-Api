@@ -206,7 +206,7 @@ export class DocumentosController {
 
   @Put('archivo/no-user/:id/:code')
   @UseInterceptors(FileInterceptor('archivo'))
-  uploadDocumentoArchivoByNoUse(
+  uploadDocumentoArchivoByNoUser(
     @Param('id') id: string,
     @Param('code') code: string,
     @UploadedFile() archivo: Express.Multer.File,

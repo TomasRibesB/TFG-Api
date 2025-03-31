@@ -65,4 +65,7 @@ export class Documento {
   @ManyToMany(() => User, (user) => user.documentosVisibles)
   @JoinTable()
   visibilidad: User[];
+
+  @Column({ nullable: false, default: false })
+  hasArchivo: boolean;
 }
