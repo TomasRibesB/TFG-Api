@@ -134,7 +134,10 @@ export class UsersService {
     );
   }
 
-  async remove(id: number) {
+  async softDelete(id: number) {
+    if (!(await this.userRepository.findOneBy({ id }))) {
+      throw new NotFoundException('User not found');
+    }
     return await this.userRepository.softDelete(id);
   }
 

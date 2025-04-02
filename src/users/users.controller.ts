@@ -161,10 +161,9 @@ export class UsersController {
     return this.usersService.uploadImage(request.user.id, file.buffer);
   }
 
-  @Delete(':id')
+  @Delete()
   @UseGuards(AuthGuard)
-  remove(@Param('id') id: string) {
-    console.log('id', id);
-    return this.usersService.remove(+id);
+  remove(@Req() request: RequestWithUser) {
+    return this.usersService.softDelete(request.user.id);
   }
 }

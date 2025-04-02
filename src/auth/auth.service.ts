@@ -22,11 +22,11 @@ export class AuthService {
   async login(loginDto: LoginDto) {
     const user = await this.usersService.findOneByEmail(loginDto.email);
     if (!user) {
-      throw new UnauthorizedException('Email o contraseña incorrectos');
+      return false;
     }
 
     if (user.email !== loginDto.email) {
-      throw new UnauthorizedException('Email o contraseña incorrectos');
+      return false;
     }
 
     const isPasswordValid = await bcryptjs.compare(
