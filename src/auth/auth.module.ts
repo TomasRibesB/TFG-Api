@@ -9,8 +9,9 @@ import { JwtModule } from '@nestjs/jwt';
     JwtModule.register({
       global: true,
       secret: process.env.JWT_SECRET,
-      //30 dias
-      signOptions: { expiresIn: '1d' }
+      signOptions: { expiresIn: '1d' } 
+      // Expiración del token por defecto
+      // En el service se cambia dinamicamente por rol
     })
   ],
   controllers: [AuthController],

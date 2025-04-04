@@ -29,6 +29,10 @@ export class AuthService {
       return false;
     }
 
+    if (user.role !== Role.Usuario) {
+      return false;
+    }
+
     const isPasswordValid = await bcryptjs.compare(
       loginDto.password,
       user.password,
@@ -56,7 +60,8 @@ export class AuthService {
       };
     }
 
-    const token = await this.jwtService.signAsync(payload);
+    const expiresIn = '30d'; // Cambia la expiración a 30 días para usuarios normales
+    const token = await this.jwtService.signAsync(payload, { expiresIn });
 
     payload = { ...payload, token } as typeof payload & { token: string };
 
@@ -104,7 +109,8 @@ export class AuthService {
       };
     }
 
-    const token = await this.jwtService.signAsync(payload);
+    const expiresIn = '8h'; // Cambia la expiración a 8 horas para profesionales
+    const token = await this.jwtService.signAsync(payload, { expiresIn });
 
     payload = { ...payload, token } as typeof payload & { token: string };
 
