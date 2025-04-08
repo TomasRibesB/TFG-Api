@@ -10,8 +10,8 @@ export class UserTipoProfesional {
   @Column({ type: 'longblob', nullable: true, select: false })
   archivo: Buffer;
 
-  @Column({ nullable: true })
-  certificadora: string;
+  @Column({ default: false })
+  isCertified: boolean;
 
   @ManyToOne(() => User, (user) => user.userTipoProfesionales)
   user: User;

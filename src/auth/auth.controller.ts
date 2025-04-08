@@ -6,6 +6,8 @@ import {
   Request,
   Post,
   UseGuards,
+  Put,
+  NotFoundException,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -44,4 +46,41 @@ export class AuthController {
     console.log(req.user, req.id);
     return this.authService.getProfile(email);
   }
+
+  @Put('verifyEmail/:token')
+  async verifyEmail(@Param('token') token: string) {
+    if (!(token.trim().length > 0)) throw new NotFoundException('Token inválido');
+    return this.authService.verifyEmail(token);
+  }
+
+  //sendPasswordResetEmail
+  @Put('sendPasswordResetEmail')
+  async sendPasswordResetEmail(@Body('email') email: string) {
+    if (!(email.trim().length > 0)) throw new NotFoundException('Email inválido');
+    return this.authService.sendPasswordResetEmail(email);
+  }
+
+  @Get('verifyPasswordResetToken/:token')
+  async verifyPasswordResetToken(@Param('token') token: string) {
+    if (!(token.trim().length > 0)) throw new NotFoundException('Token inválido');
+    return this.authService.verifyPasswordResetToken(token);
+  }
+
+  @Put('resetPassword')
+  async resetPassword(
+    @Body('token') token: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    if (!(token.trim().length > 0)) throw new NotFoundException('Token inválido');
+    if (!(newPassword.trim().length > 0))
+      throw new NotFoundException('Contraseña inválida');
+    return this.authService.resetPassword(token, newPassword);
+  }
+
+  @Put('denyPasswordReset')
+  async denyPasswordReset(@Body('token') token: string) {
+    if (!(token.trim().length > 0)) throw new NotFoundException('Token inválido');
+    return this.authService.denyPasswordReset(token);
+  }
+
 }

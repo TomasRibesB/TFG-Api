@@ -11,17 +11,25 @@ import * as bcryptjs from 'bcryptjs';
 import { JwtService } from '@nestjs/jwt';
 import { RegisterProfesionalDto } from './dto/register-profesional.dto';
 import { Role } from 'src/users/entities/role.enum';
+import { v4 as uuidv4 } from 'uuid';
+import { User } from 'src/users/entities/user.entity';
+import { AuthEmailNotificationService } from './auth.email.notification.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UsersService, // Use the UsersService type instead of value
     private readonly jwtService: JwtService,
+    private readonly authEmailNotificationService: AuthEmailNotificationService,
   ) {}
 
   async login(loginDto: LoginDto) {
-    const user = await this.usersService.findOneByEmail(loginDto.email);
+    const user = await this.usersService.findOneByEmail(loginDto.email, true);
     if (!user) {
+      return false;
+    }
+
+    if (user.deletedAt) {
       return false;
     }
 
@@ -69,8 +77,12 @@ export class AuthService {
   }
 
   async loginProfesional(loginDto: LoginDto) {
-    const user = await this.usersService.findOneByEmail(loginDto.email);
+    const user = await this.usersService.findOneByEmail(loginDto.email, true);
     if (!user) {
+      throw new UnauthorizedException('Email o contraseña incorrectos');
+    }
+
+    if (user.deletedAt) {
       throw new UnauthorizedException('Email o contraseña incorrectos');
     }
 
@@ -129,19 +141,30 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     const user = await this.usersService.findOneByEmail(registerDto.email);
     const userByDni = await this.usersService.findOneByDni(registerDto.dni);
+    console.log('user', user, userByDni);
     if (user) {
-      throw new BadRequestException('El email ya está registrado');
+      console.log('El email ya está registrado');
+      return false;
     }
     if (userByDni) {
-      throw new BadRequestException('El DNI ya está registrado');
+      console.log('El DNI ya está registrado');
+      return false;
     }
 
     registerDto.firstName = this.formatNombresPropios(registerDto.firstName);
     registerDto.lastName = this.formatNombresPropios(registerDto.lastName);
     const plainPassword = registerDto.password;
-    await this.usersService.create(registerDto);
+    const userToCreate = new User();
+    Object.assign(userToCreate, registerDto);
+    userToCreate.emailVerificationToken = uuidv4();
+    console.log('userToCreate', userToCreate);
+    await this.usersService.create(userToCreate);
+    await this.authEmailNotificationService.sendValidationEmail(
+      registerDto.email,
+      userToCreate.emailVerificationToken,
+    );
     console.log('Usuario creado', registerDto.email, plainPassword);
-    return this.login({ email: registerDto.email, password: plainPassword });
+    return true;
   }
 
   async registerProfesional(registerDto: RegisterProfesionalDto) {
@@ -156,20 +179,23 @@ export class AuthService {
     registerDto.firstName = this.formatNombresPropios(registerDto.firstName);
     registerDto.lastName = this.formatNombresPropios(registerDto.lastName);
     const plainPassword = registerDto.password;
-    const createdUser = await this.usersService.create(registerDto);
+    const userToCreate = new User();
+    Object.assign(userToCreate, registerDto);
+    userToCreate.emailVerificationToken = uuidv4();
+    console.log('userToCreate', userToCreate);
+    const createdUser = await this.usersService.create(userToCreate);
+    await this.authEmailNotificationService.sendValidationEmail(
+      registerDto.email,
+      userToCreate.emailVerificationToken,
+    );
 
-    if (
-      registerDto.tipoProfesionalIds &&
-      registerDto.tipoProfesionalIds.length > 0
-    ) {
-      await this.usersService.assignTipoProfesionales(
-        createdUser.id,
-        registerDto.tipoProfesionalIds,
-      );
-    }
+    await this.usersService.assignTipoProfesionales(
+      createdUser.id,
+      registerDto.tipoProfesionalIds ?? [],
+    );
 
     console.log('Usuario creado', registerDto.email, plainPassword);
-    return this.login({ email: registerDto.email, password: plainPassword });
+    return this.usersService.findOne(createdUser.id);
   }
 
   async getProfile(email: string) {
@@ -180,5 +206,78 @@ export class AuthService {
     }
 
     return user;
+  }
+
+  async verifyEmail(token: string) {
+    const user = await this.usersService.findOneByEmailVerificationToken(token);
+    if (!user) {
+      return false;
+    }
+    await this.usersService.updateUserVerificationToken(user.id);
+    await this.authEmailNotificationService.sendValidationSuccessEmail(
+      user.email,
+    );
+
+    return true;
+  }
+
+  async sendPasswordResetEmail(email: string) {
+    const user = await this.usersService.findOneByEmail(email);
+    if (!user) {
+      return false
+    }
+    if (user.deletedAt) {
+      return false;
+    }
+    const token = uuidv4();
+    await this.usersService.setPasswordResetToken(user.id, token);
+    await this.authEmailNotificationService.sendPasswordResetEmail(
+      user.email,
+      token,
+    );
+    return true;
+  }
+
+  async verifyPasswordResetToken(token: string) {
+    const user = await this.usersService.findOneByEmailPasswordResetToken(token);
+    if (!user) {
+      console.log('Token no encontrado');
+      return false;
+    }
+    if (user.deletedAt) {
+      console.log('Cuenta eliminada');
+      return false;
+    }
+    console.log('Token válido');
+    return true;
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const user =
+      await this.usersService.findOneByEmailPasswordResetToken(token);
+    if (!user) {
+      throw new BadRequestException('Invalid token');
+    }
+    const hashedPassword = await bcryptjs.hash(newPassword, 10);
+    await this.usersService.updateUserResetPasswordToken(
+      user.id,
+      hashedPassword,
+    );
+    await this.authEmailNotificationService.confirmPasswordResetEmail(
+      user.email,
+    );
+
+    return { message: 'Password reset successfully' };
+  }
+
+  async denyPasswordReset(token: string) {
+    const user =
+      await this.usersService.findOneByEmailPasswordResetToken(token);
+    if (!user) {
+      return false;
+    }
+    await this.usersService.denyPasswordResetToken(user.id);
+    await this.authEmailNotificationService.denyPasswordResetEmail(user.email);
+    return true;
   }
 }

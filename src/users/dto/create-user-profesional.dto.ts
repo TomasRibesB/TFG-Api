@@ -9,6 +9,7 @@ import {
   IsEnum,
   IsArray,
   IsNumber,
+  IsBoolean,
 } from 'class-validator';
 import { Role } from '../entities/role.enum';
 
@@ -54,4 +55,20 @@ export class CreateUserProfesionalDto {
   @IsNumber({}, { each: true })
   @Type(() => Number)
   tipoProfesionalIds?: number[];
+
+  @IsOptional()
+  @IsBoolean()
+  isVerified?: boolean;
+
+  @IsOptional()
+  @IsString()
+  emailVerificationToken?: string;
+
+  @IsOptional()
+  @IsString()
+  registerVerificationToken?: string;
+
+  @IsOptional()
+  @IsString()
+  resetPasswordToken?: string;
 }

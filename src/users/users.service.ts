@@ -25,6 +25,7 @@ export class UsersService {
   ) {}
 
   async create(createUserDto: CreateUserDto) {
+    console.log('createUserDto', createUserDto);
     createUserDto.password = await bcryptjs.hash(createUserDto.password, 10); // Hash the password
     return await this.userRepository.save(createUserDto);
   }
@@ -34,7 +35,10 @@ export class UsersService {
   }
 
   async findOne(id: number) {
-    return await this.userRepository.findOneBy({ id });
+    return await this.userRepository.findOne({
+      where: { id },
+      relations: ['userTipoProfesionales.tipoProfesional'],
+    });
   }
 
   async findOneImage(id: number) {
@@ -53,21 +57,26 @@ export class UsersService {
     }));
   }
 
-  async findOneByEmail(email: string) {
-    return await this.userRepository
+  async findOneByEmail(email: string, isVerified = false) {
+    const qb = this.userRepository
       .createQueryBuilder('user')
       .addSelect('user.password')
       .where('user.email = :email', { email })
+      .withDeleted()
       .leftJoinAndSelect('user.userTipoProfesionales', 'userTipoProfesionales')
       .leftJoinAndSelect(
         'userTipoProfesionales.tipoProfesional',
         'tipoProfesional',
-      )
-      .getOne();
+      );
+
+    if (isVerified) {
+      qb.andWhere('user.isVerified = :isVerified', { isVerified: true });
+    }
+    return qb.getOne();
   }
 
   async findOneByDni(dni: string) {
-    return await this.userRepository.findOneBy({ dni });
+    return await this.userRepository.findOne({ where: { dni }, withDeleted: true });
   }
 
   async updateEmail(id: number, email: string) {
@@ -91,6 +100,44 @@ export class UsersService {
 
     const password = await bcryptjs.hash(newPassword, 10);
     return await this.userRepository.update(id, { password });
+  }
+
+  async findOneByEmailVerificationToken(token: string) {
+    return await this.userRepository.findOne({
+      where: { emailVerificationToken: token },
+    });
+  }
+
+  async findOneByEmailPasswordResetToken(token: string) {
+    return await this.userRepository.findOne({
+      where: { resetPasswordToken: token },
+    });
+  }
+
+  async updateUserVerificationToken(id: number) {
+    return await this.userRepository.update(id, {
+      isVerified: true,
+      emailVerificationToken: null,
+    });
+  }
+
+  async setPasswordResetToken(id: number, token: string) {
+    return await this.userRepository.update(id, {
+      resetPasswordToken: token,
+    });
+  }
+
+  async denyPasswordResetToken(id: number) {
+    return await this.userRepository.update(id, {
+      resetPasswordToken: null,
+    });
+  }
+
+  async updateUserResetPasswordToken(id: number, password: string) {
+    return await this.userRepository.update(id, {
+      resetPasswordToken: null,
+      password,
+    });
   }
 
   async uploadImage(id: number, image: Buffer) {
@@ -515,20 +562,30 @@ export class UsersService {
     return await this.getUserByProfesional(profesionalId, userId);
   }
 
-  async assignTipoProfesionales(userId: number, tipoProfesionalIds: number[]) {
-    for (const tipoId of tipoProfesionalIds) {
-      const tipo = await this.tipoProfesionalRepository.findOne({
-        where: { id: tipoId },
-      });
-      if (!tipo) {
-        throw new NotFoundException(
-          `TipoProfesional con id ${tipoId} no encontrado`,
-        );
-      }
+  async assignTipoProfesionales(
+    userId: number,
+    tipoProfesionalIds: number[] = [],
+  ) {
+    if (tipoProfesionalIds.length === 0) {
       const userTipoProf = new UserTipoProfesional();
       userTipoProf.user = { id: userId } as User;
-      userTipoProf.tipoProfesional = tipo;
+      userTipoProf.tipoProfesional = null;
       await this.userTipoProfesionalRepository.save(userTipoProf);
+    } else {
+      for (const tipoId of tipoProfesionalIds) {
+        const tipo = await this.tipoProfesionalRepository.findOne({
+          where: { id: tipoId },
+        });
+        if (!tipo) {
+          throw new NotFoundException(
+            `TipoProfesional con id ${tipoId} no encontrado`,
+          );
+        }
+        const userTipoProf = new UserTipoProfesional();
+        userTipoProf.user = { id: userId } as User;
+        userTipoProf.tipoProfesional = tipo;
+        await this.userTipoProfesionalRepository.save(userTipoProf);
+      }
     }
   }
 

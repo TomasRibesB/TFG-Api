@@ -125,4 +125,16 @@ export class User {
     (permisoDocumento) => permisoDocumento.usuario,
   )
   permisosDocumentos: PermisoDocumento[];
+
+  @Column({ default: false })
+  isVerified: boolean;
+
+  @Column({ nullable: true, select: false })
+  emailVerificationToken: string;
+
+  @Column({ nullable: true, select: false })
+  registerVerificationToken: string;
+
+  @Column({ nullable: true, select: false })
+  resetPasswordToken: string;
 }
