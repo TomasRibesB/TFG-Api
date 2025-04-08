@@ -23,15 +23,12 @@ export class TurnosEmailNotificationService {
 
   async enviarNotificacionesTurnos() {
     const ahora = new Date();
-    const fechaObjetivo = new Date(ahora.getTime() + 60 * 60 * 1000); // 1 hora en el futuro
-    const margen = 5 * 60 * 1000; // margen de 5 minutos
-    const inicioMin = new Date(fechaObjetivo.getTime() - margen);
-    const inicioMax = new Date(fechaObjetivo.getTime() + margen);
+    const fechaFinal = new Date(ahora.getTime() + 60 * 60 * 1000); // 1 hora en el futuro
 
-    // Se usa el nuevo campo "notificado" en lugar de notificadoPaciente y notificadoProfesional.
+    // Buscar todos los turnos entre ahora y 1 hora desde ahora
     const turnos = await this.turnoRepository.find({
       where: {
-        fechaHora: Between(inicioMin, inicioMax),
+        fechaHora: Between(ahora, fechaFinal),
         notificado: IsNull(),
         estado: Not(
           In([EstadoTurno.Cancelado, EstadoTurno.Pendiente, EstadoTurno.Libre]),
@@ -40,11 +37,22 @@ export class TurnosEmailNotificationService {
       relations: ['paciente', 'profesional'],
     });
 
-    // URL pública de tu logo (asegúrate de que sea accesible desde internet)
     const logoUrl = `${process.env.SERVER_HOST}/api/v1/email`;
 
     for (const turno of turnos) {
       try {
+        // Calcular el tiempo restante
+        const ahoraEnLoop = new Date();
+        const diffMs = turno.fechaHora.getTime() - ahoraEnLoop.getTime();
+        const diffMin = Math.floor(diffMs / (1000 * 60));
+        const diffSeg = Math.floor((diffMs % (1000 * 60)) / 1000);
+
+        // Personalizar mensaje dinámico
+        const tiempoRestante =
+          diffMin > 0
+            ? `${diffMin} minuto(s) y ${diffSeg} segundo(s)`
+            : `${diffSeg} segundo(s)`;
+
         // Envío de correo para paciente
         const pacienteEmail = turno.paciente?.email;
         if (pacienteEmail) {
@@ -86,13 +94,13 @@ export class TurnosEmailNotificationService {
                             Estimado/a,
                           </p>
                           <p style="font-family:Arial, sans-serif; font-size:16px; line-height:24px; color:#555555;">
-                            Le recordamos que tiene un turno programado para dentro de <strong>1 hora</strong>.
+                            Le recordamos que tiene un turno programado para dentro de <strong>${tiempoRestante}</strong>.
                           </p>
                           <p style="font-family:Arial, sans-serif; font-size:16px; line-height:24px; color:#555555;">
                             <strong>Fecha y hora:</strong> ${new Date(turno.fechaHora).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })} a las ${new Date(turno.fechaHora).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false })}
                           </p>
                           <p style="font-family:Arial, sans-serif; font-size:16px; line-height:24px; color:#555555;">
-                            Por favor, asegúrese de estar preparado para su consulta. Si necesita cancelar o reprogramar, contacte a su profesional mediante el siguiente email: ${turno.profesional?.email}
+                            Si necesita cancelar o reprogramar, contacte a su profesional: ${turno.profesional?.email}
                           </p>
                           <p style="font-family:Arial, sans-serif; font-size:16px; line-height:24px; color:#555555;">
                             ¡Gracias por confiar en nosotros!
@@ -162,7 +170,7 @@ export class TurnosEmailNotificationService {
                             Estimado/a,
                           </p>
                           <p style="font-family:Arial, sans-serif; font-size:16px; line-height:24px; color:#555555;">
-                            Le recordamos que tiene un turno programado para dentro de <strong>1 hora</strong>.
+                            Le recordamos que tiene un turno programado para dentro de <strong>${tiempoRestante}</strong>.
                           </p>
                           <p style="font-family:Arial, sans-serif; font-size:16px; line-height:24px; color:#555555;">
                             <strong>Fecha y hora:</strong> ${new Date(turno.fechaHora).toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' })} a las ${new Date(turno.fechaHora).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', hour12: false })}
