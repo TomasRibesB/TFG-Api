@@ -24,21 +24,36 @@ export class AuthService {
   ) {}
 
   async login(loginDto: LoginDto) {
-    const user = await this.usersService.findOneByEmail(loginDto.email, true);
+    const user = await this.usersService.findOneByEmail(loginDto.email);
     if (!user) {
-      return false;
+      throw new UnauthorizedException('Email o contraseña incorrectos');
+    }
+
+    if (!user.isVerified) {
+      console.log('Usuario no verificado');
+      throw new UnauthorizedException(
+        'Debe verificar su cuenta, revise su email',
+      );
     }
 
     if (user.deletedAt) {
-      return false;
+      console.log('Usuario eliminado');
+      throw new UnauthorizedException('Email o contraseña incorrectos');
     }
 
     if (user.email !== loginDto.email) {
-      return false;
+      throw new UnauthorizedException('Email o contraseña incorrectos');
     }
 
     if (user.role !== Role.Usuario) {
-      return false;
+      throw new UnauthorizedException('Esta aplicación es solo para usuarios');
+    }
+
+    if (user.lockUntil && new Date() < new Date(user.lockUntil)) {
+      console.log('Usuario bloqueado hasta', user.lockUntil);
+      throw new UnauthorizedException(
+        'Cuenta bloqueada. Intente de nuevo más tarde',
+      );
     }
 
     const isPasswordValid = await bcryptjs.compare(
@@ -47,9 +62,21 @@ export class AuthService {
     );
 
     if (!isPasswordValid) {
-      console.log('Password incorrecto');
-      return false;
+      await this.usersService.incrementLoginAttempts(user.id);
+
+      const updatedUser = await this.usersService.findOneByEmail(
+        loginDto.email,
+        true,
+      );
+      if (updatedUser.loginAttempts >= 5) {
+        const lockUntil = new Date(new Date().getTime() + 60 * 60 * 1000); // 1 hora
+        await this.usersService.setLockUntil(user.id, lockUntil);
+        console.log('Usuario bloqueado por 1 hora');
+      }
+      throw new UnauthorizedException('Email o contraseña incorrectos');
     }
+
+    await this.usersService.resetLoginAttempts(user.id);
 
     let payload: any = {
       firstName: user.firstName,
@@ -68,7 +95,7 @@ export class AuthService {
       };
     }
 
-    const expiresIn = '30d'; // Cambia la expiración a 30 días para usuarios normales
+    const expiresIn = '30d'; // Para usuarios
     const token = await this.jwtService.signAsync(payload, { expiresIn });
 
     payload = { ...payload, token } as typeof payload & { token: string };
@@ -77,9 +104,16 @@ export class AuthService {
   }
 
   async loginProfesional(loginDto: LoginDto) {
-    const user = await this.usersService.findOneByEmail(loginDto.email, true);
+    const user = await this.usersService.findOneByEmail(loginDto.email);
     if (!user) {
       throw new UnauthorizedException('Email o contraseña incorrectos');
+    }
+
+    if (!user.isVerified) {
+      console.log('Usuario no verificado');
+      throw new UnauthorizedException(
+        'Debe verificar su cuenta, revise su email',
+      );
     }
 
     if (user.deletedAt) {
@@ -94,15 +128,34 @@ export class AuthService {
       throw new UnauthorizedException('Esta web es solo para profesionales');
     }
 
+    if (user.lockUntil && new Date() < new Date(user.lockUntil)) {
+      console.log('Usuario profesional bloqueado hasta', user.lockUntil);
+      throw new UnauthorizedException(
+        'Cuenta bloqueada. Intente de nuevo más tarde',
+      );
+    }
+
     const isPasswordValid = await bcryptjs.compare(
       loginDto.password,
       user.password,
     );
 
     if (!isPasswordValid) {
-      console.log('Password incorrecto');
+      await this.usersService.incrementLoginAttempts(user.id);
+
+      const updatedUser = await this.usersService.findOneByEmail(
+        loginDto.email,
+        true,
+      );
+      if (updatedUser.loginAttempts >= 5) {
+        const lockUntil = new Date(new Date().getTime() + 60 * 60 * 1000); // Bloqueo por 1 hora
+        await this.usersService.setLockUntil(user.id, lockUntil);
+        console.log('Usuario profesional bloqueado por 1 hora');
+      }
       throw new UnauthorizedException('Email o contraseña incorrectos');
     }
+
+    await this.usersService.resetLoginAttempts(user.id);
 
     let payload: any = {
       firstName: user.firstName,
@@ -121,9 +174,8 @@ export class AuthService {
       };
     }
 
-    const expiresIn = '8h'; // Cambia la expiración a 8 horas para profesionales
+    const expiresIn = '8h'; // Expiración para profesionales
     const token = await this.jwtService.signAsync(payload, { expiresIn });
-
     payload = { ...payload, token } as typeof payload & { token: string };
 
     return payload;
@@ -224,7 +276,7 @@ export class AuthService {
   async sendPasswordResetEmail(email: string) {
     const user = await this.usersService.findOneByEmail(email);
     if (!user) {
-      return false
+      return false;
     }
     if (user.deletedAt) {
       return false;
@@ -239,7 +291,8 @@ export class AuthService {
   }
 
   async verifyPasswordResetToken(token: string) {
-    const user = await this.usersService.findOneByEmailPasswordResetToken(token);
+    const user =
+      await this.usersService.findOneByEmailPasswordResetToken(token);
     if (!user) {
       console.log('Token no encontrado');
       return false;

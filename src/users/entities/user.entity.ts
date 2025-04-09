@@ -137,4 +137,10 @@ export class User {
 
   @Column({ nullable: true, select: false })
   resetPasswordToken: string;
+
+  @Column({ type: 'int', default: 0 })
+  loginAttempts: number;
+
+  @Column({ type: 'timestamp', nullable: true })
+  lockUntil: Date;
 }

@@ -76,7 +76,10 @@ export class UsersService {
   }
 
   async findOneByDni(dni: string) {
-    return await this.userRepository.findOne({ where: { dni }, withDeleted: true });
+    return await this.userRepository.findOne({
+      where: { dni },
+      withDeleted: true,
+    });
   }
 
   async updateEmail(id: number, email: string) {
@@ -595,5 +598,20 @@ export class UsersService {
 
   async getUserByUser(id: number) {
     return await this.userRepository.findOneBy({ id });
+  }
+
+  async incrementLoginAttempts(userId: number) {
+    await this.userRepository.increment({ id: userId }, 'loginAttempts', 1);
+  }
+
+  async setLockUntil(userId: number, lockUntil: Date) {
+    await this.userRepository.update(userId, { lockUntil });
+  }
+
+  async resetLoginAttempts(userId: number) {
+    await this.userRepository.update(userId, {
+      loginAttempts: 0,
+      lockUntil: null,
+    });
   }
 }
