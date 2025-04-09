@@ -62,6 +62,16 @@ export class DocumentosController {
   }
 
   @UseGuards(AuthGuard)
+  @Delete('hard/:id')
+  async deleteDocumentoHard(
+    @Param('id') id: string,
+    @Req() request: RequestWithUser,
+  ) {
+    await this.documentosService.deleteDocumentoHard(+id, request.user.id);
+    return true;
+  }
+
+  @UseGuards(AuthGuard)
   @Delete(':id')
   remove(@Req() request: RequestWithUser, @Param('id') id: string) {
     return this.documentosService.remove(+id, request.user.id);

@@ -342,4 +342,28 @@ export class DocumentosService {
     });
     return await this.documentoRepository.findOne({ where: { id } });
   }
+  async deleteDocumentoHard(
+    documentoId: number,
+    userId: number,
+  ): Promise<void> {
+    const documento = await this.documentoRepository.findOne({
+      where: { id: documentoId },
+      relations: ['usuario', 'visibilidad'],
+    });
+    if (!documento) {
+      throw new NotFoundException(
+        `Documento con id ${documentoId} no encontrado`,
+      );
+    }
+    if (documento.usuario.id !== userId) {
+      throw new UnauthorizedException(
+        `No tienes permisos para eliminar este documento`,
+      );
+    }
+    // Limpiar las relaciones de visibilidad
+    documento.visibilidad = [];
+    await this.documentoRepository.save(documento);
+    // Borrar definitivamente el documento
+    await this.documentoRepository.remove(documento);
+  }
 }
