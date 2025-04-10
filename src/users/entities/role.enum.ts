@@ -3,4 +3,5 @@ export enum Role {
     Nutricionista = 'nutricionista',
     Entrenador = 'entrenador',
     Profesional = 'profesionalSalud',
+    Administrador = 'administrador',
   }

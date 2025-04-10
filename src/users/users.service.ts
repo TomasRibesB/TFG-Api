@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
@@ -613,5 +617,110 @@ export class UsersService {
       loginAttempts: 0,
       lockUntil: null,
     });
+  }
+
+  async getAllProfesionales(userId: number) {
+    //verifico si eres administrador
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) throw new NotFoundException('El usuario no existe');
+    if (user.role === Role.Administrador) {
+      return await this.userRepository
+        .createQueryBuilder('user')
+        .addSelect('user.deletedAt')
+        .leftJoinAndSelect(
+          'user.userTipoProfesionales',
+          'userTipoProfesionales',
+        )
+        .leftJoinAndSelect(
+          'userTipoProfesionales.tipoProfesional',
+          'tipoProfesional',
+        )
+        .where('user.role IN (:...roles)', {
+          roles: [Role.Profesional, Role.Nutricionista, Role.Entrenador],
+        })
+        .orderBy('userTipoProfesionales.isCertified', 'ASC')
+        .addOrderBy('user.firstName', 'ASC')
+        .withDeleted()
+        .getMany();
+    } else {
+      throw new UnauthorizedException(
+        'No tienes permisos para ver todos los profesionales',
+      );
+    }
+  }
+
+  async setBajaOrCertificate(
+    userId: number,
+    userTipoProfesionalId: number,
+    profesionalId: number,
+    isCertified: boolean,
+  ) {
+    //verifico si eres administrador
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    if (!user) throw new NotFoundException('El usuario no existe');
+    if (user.role === Role.Administrador) {
+      const profesional = await this.userRepository.findOne({
+        where: { id: profesionalId },
+        relations: ['userTipoProfesionales'],
+        withDeleted: true,
+      });
+      if (!profesional) throw new NotFoundException('El profesional no existe');
+      if (isCertified) {
+        await this.userTipoProfesionalRepository.update(
+          {
+            id: userTipoProfesionalId,
+          },
+          { isCertified: true },
+        );
+        await this.userRepository.restore(profesionalId);
+        return true;
+      } else {
+        await this.userTipoProfesionalRepository.update(
+          {
+            id: userTipoProfesionalId,
+          },
+          { isCertified: false },
+        );
+        await this.userRepository.softDelete(profesionalId);
+
+        return true;
+      }
+    } else {
+      throw new UnauthorizedException(
+        'No tienes permisos para ver todos los profesionales',
+      );
+    }
+  }
+
+  async getCertificadoByProfesional(
+    userId: number,
+    profesionalId: number,
+    userTipoProfesionalId: number,
+  ) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+    if (!user) throw new NotFoundException('El usuario no existe');
+    if (user.role !== Role.Administrador) {
+      throw new UnauthorizedException(
+        'No tienes permisos para ver todos los profesionales',
+      );
+    }
+
+    const userTipoProfesional =
+      await this.userTipoProfesionalRepository.findOne({
+        where: { id: userTipoProfesionalId, user: { id: profesionalId } },
+        relations: ['tipoProfesional'],
+        select: { id: true, archivo: true },
+      });
+    if (!userTipoProfesional) {
+      throw new NotFoundException('El certificado no existe');
+    }
+    return userTipoProfesional.archivo;
   }
 }
