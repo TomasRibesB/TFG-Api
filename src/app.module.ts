@@ -14,6 +14,7 @@ import { ChatModule } from './tickets/chat/chat.module';
 import { LoggerMiddleware } from './middlewares/logger/logger.middleware';
 import { TipoProfesionalModule } from './tipo-profesional/tipo-profesional.module';
 import { EmailModule } from './email/email.module';
+import { TasksModule } from './tasks/tasks.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot({
@@ -40,6 +41,7 @@ import { EmailModule } from './email/email.module';
     ChatModule,
     TipoProfesionalModule,
     EmailModule,
+    TasksModule,
   ],
   controllers: [],
   providers: [],
