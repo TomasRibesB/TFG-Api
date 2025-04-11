@@ -320,37 +320,41 @@ export class UsersService {
       return { dias, horas, minutos };
     };
 
-    // Formatear los resultados a { id, tipo, fecha, descripcion }
-    const formatTurno = (turno: Turno, tipo: string) => ({
-      id: turno.id,
-      tipo,
-      fecha: turno.fechaHora,
-      descripcion: `Turno con ${turno.paciente.firstName} ${turno.paciente.lastName} en ${calcularTiempoRestante(turno.fechaHora).dias > 0 ? `${calcularTiempoRestante(turno.fechaHora).dias} días,` : ''} ${calcularTiempoRestante(turno.fechaHora).horas > 0 ? `${calcularTiempoRestante(turno.fechaHora).horas} horas y` : ''} ${calcularTiempoRestante(turno.fechaHora).minutos > 0 ? `${calcularTiempoRestante(turno.fechaHora).minutos} minutos` : ''}`,
-    });
+    try {
+      const formatTurno = (turno: Turno, tipo: string) => ({
+        id: turno.id,
+        tipo,
+        fecha: turno.fechaHora,
+        descripcion: `Turno con ${turno?.paciente?.firstName ?? 'Usuario'} ${turno?.paciente?.lastName ?? ''} en ${calcularTiempoRestante(turno.fechaHora).dias > 0 ? `${calcularTiempoRestante(turno.fechaHora).dias} días,` : ''} ${calcularTiempoRestante(turno.fechaHora).horas > 0 ? `${calcularTiempoRestante(turno.fechaHora).horas} horas y` : ''} ${calcularTiempoRestante(turno.fechaHora).minutos > 0 ? `${calcularTiempoRestante(turno.fechaHora).minutos} minutos` : ''}`,
+      });
 
-    const formatTicket = (ticket: Ticket) => ({
-      id: ticket.id,
-      tipo: 'Ticket',
-      fecha: ticket.fechaCreacion,
-      descripcion: `Ticket sobre ${ticket.asunto} de ${ticket.solicitante.firstName} ${ticket.solicitante.lastName} pendiente`,
-    });
+      const formatTicket = (ticket: Ticket) => ({
+        id: ticket.id,
+        tipo: 'Ticket',
+        fecha: ticket.fechaCreacion,
+        descripcion: `Ticket sobre ${ticket.asunto} de ${ticket?.solicitante?.firstName ?? 'Usuario'} ${ticket?.solicitante?.lastName ?? ''} pendiente`,
+      });
 
-    // Mapear cada resultado según su tipo
-    const recordatoriosTurnosEnDosDias = turnosEnDosDias.map((turno) =>
-      formatTurno(turno, 'Turno'),
-    );
-    const recordatoriosTurnosPendientes = turnosPendientes.map((turno) =>
-      formatTurno(turno, 'Turno'),
-    );
-    const recordatoriosTickets = ticketsPendientes.map((ticket) =>
-      formatTicket(ticket),
-    );
+      // Mapear cada resultado según su tipo
+      const recordatoriosTurnosEnDosDias = turnosEnDosDias.map((turno) =>
+        formatTurno(turno, 'Turno'),
+      );
+      const recordatoriosTurnosPendientes = turnosPendientes.map((turno) =>
+        formatTurno(turno, 'Turno'),
+      );
+      const recordatoriosTickets = ticketsPendientes.map((ticket) =>
+        formatTicket(ticket),
+      );
 
-    return [
-      ...recordatoriosTurnosEnDosDias,
-      ...recordatoriosTurnosPendientes,
-      ...recordatoriosTickets,
-    ];
+      return [
+        ...recordatoriosTurnosEnDosDias,
+        ...recordatoriosTurnosPendientes,
+        ...recordatoriosTickets,
+      ];
+    } catch (error) {
+      console.error('Error al formatear los recordatorios', error);
+      return [[], [], []];
+    }
   }
 
   async getRecordatoriosByUser(id: number) {
