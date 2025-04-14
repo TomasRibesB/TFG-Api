@@ -37,8 +37,6 @@ export class TurnosEmailNotificationService {
       relations: ['paciente', 'profesional'],
     });
 
-    const logoUrl = `${process.env.SERVER_HOST}/api/v1/email`;
-
     for (const turno of turnos) {
       try {
         // Calcular el tiempo restante
@@ -74,9 +72,7 @@ export class TurnosEmailNotificationService {
                         <td style="padding:20px; background-color:rgb(120, 69, 172);">
                           <table role="presentation" style="width:100%; border-collapse:collapse; border:0; border-spacing:0;">
                             <tr>
-                              <td style="width:50px; vertical-align:middle;">
-                                <img src="${logoUrl}" alt="Logo Nexo Health" width="50" style="height:auto; display:block; border-radius: 50px;" />
-                              </td>
+                              
                               <td style="vertical-align:middle; padding-left:10px;">
                                 <h1 style="margin:0; font-family:Arial, sans-serif; font-size:24px; color:rgb(255,255,255);">
                                   Nexo Health
@@ -150,9 +146,7 @@ export class TurnosEmailNotificationService {
                         <td style="padding:20px; background-color:rgb(120, 69, 172);">
                           <table role="presentation" style="width:100%; border-collapse:collapse; border:0; border-spacing:0;">
                             <tr>
-                              <td style="width:50px; vertical-align:middle;">
-                                <img src="${logoUrl}" alt="Logo Nexo Health" width="50" style="height:auto; display:block; border-radius: 50px;" />
-                              </td>
+                              
                               <td style="vertical-align:middle; padding-left:10px;">
                                 <h1 style="margin:0; font-family:Arial, sans-serif; font-size:24px; color:rgb(255,255,255);">
                                   Nexo Health
@@ -218,7 +212,6 @@ export class TurnosEmailNotificationService {
   }
 
   async enviarNotificacionTurnoReservado(turno: Turno) {
-    const logoUrl = `${process.env.SERVER_HOST}/api/v1/email`;
 
     // Notificación para el usuario (paciente) que reservó el turno
     if (turno.paciente?.email) {
@@ -239,9 +232,7 @@ export class TurnosEmailNotificationService {
                     <td style="padding:20px; background-color:rgb(120,69,172);">
                       <table role="presentation" style="width:100%;">
                         <tr>
-                          <td style="width:50px;">
-                            <img src="${logoUrl}" alt="Logo Nexo Health" width="50" style="display:block; border-radius:50px;">
-                          </td>
+                          
                           <td style="padding-left:10px; color:#ffffff; font-family:Arial, sans-serif; font-size:24px;">
                             Nexo Health
                           </td>
@@ -324,9 +315,7 @@ export class TurnosEmailNotificationService {
                     <td style="padding:20px; background-color:rgb(120,69,172);">
                       <table role="presentation" style="width:100%;">
                         <tr>
-                          <td style="width:50px;">
-                            <img src="${logoUrl}" alt="Logo Nexo Health" width="50" style="display:block; border-radius:50px;">
-                          </td>
+                          
                           <td style="padding-left:10px; color:#ffffff; font-family:Arial, sans-serif; font-size:24px;">
                             Nexo Health
                           </td>
@@ -395,8 +384,6 @@ export class TurnosEmailNotificationService {
   }
 
   async enviarNotificacionTurnoCancelado(turno: Turno) {
-    const logoUrl = `${process.env.SERVER_HOST}/api/v1/email`;
-
     // Notificación para paciente
     if (turno.paciente?.email) {
       const subjectPaciente = 'Turno Cancelado';
@@ -416,9 +403,7 @@ export class TurnosEmailNotificationService {
                     <td style="padding:20px; background-color:rgb(120,69,172);">
                       <table role="presentation" style="width:100%;">
                         <tr>
-                          <td style="width:50px;">
-                            <img src="${logoUrl}" alt="Logo Nexo Health" width="50" style="display:block; border-radius:50px;">
-                          </td>
+                          
                           <td style="padding-left:10px; color:#ffffff; font-family:Arial, sans-serif; font-size:24px;">
                             Nexo Health
                           </td>
@@ -495,9 +480,7 @@ export class TurnosEmailNotificationService {
                     <td style="padding:20px; background-color:rgb(120,69,172);">
                       <table role="presentation" style="width:100%;">
                         <tr>
-                          <td style="width:50px;">
-                            <img src="${logoUrl}" alt="Logo Nexo Health" width="50" style="display:block; border-radius:50px;">
-                          </td>
+                          
                           <td style="padding-left:10px; color:#ffffff; font-family:Arial, sans-serif; font-size:24px;">
                             Nexo Health
                           </td>

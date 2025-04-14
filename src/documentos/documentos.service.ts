@@ -4,7 +4,7 @@ import {
   NotFoundException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { Repository, Not, IsNull, In } from 'typeorm';
+import { Repository, Not, IsNull, In, Brackets } from 'typeorm';
 import { Documento } from './entities/documento.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { CreateDocumentoDto } from './dto/create-documento.dto';
@@ -181,7 +181,6 @@ export class DocumentosService {
   }
 
   async findOneWithArchivo(id: number, userId: number): Promise<Documento> {
-    console.log('findOneWithArchivo', id, userId);
     const documento = await this.documentoRepository
       .createQueryBuilder('documento')
       .addSelect('documento.archivo')
@@ -190,16 +189,20 @@ export class DocumentosService {
       .leftJoin('documento.usuario', 'usuario')
       .where('documento.id = :id', { id })
       .andWhere('documento.fechaBaja IS NULL')
-      .orWhere('visibilidad.id = :userId', { userId })
-      .orWhere('usuario.id = :userId', { userId })
-      .orWhere('profesional.id = :userId', { userId })
+      .andWhere(
+         new Brackets(qb => {
+           qb.where('visibilidad.id = :userId', { userId })
+             .orWhere('usuario.id = :userId', { userId })
+             .orWhere('profesional.id = :userId', { userId });
+         }),
+      )
       .getOne();
 
     if (!documento) {
       throw new Error(`Documento con id ${id} no encontrado`);
     }
     return documento;
-  }
+}
 
   async createPermisoDocumento(usuarioId: number): Promise<PermisoDocumento> {
     const permisoActivo = await this.permisoDocumentoRepository.findOne({

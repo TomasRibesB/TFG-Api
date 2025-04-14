@@ -8,12 +8,7 @@ export class TicketsEmailNotificationService {
 
   constructor(private readonly emailService: EmailService) {}
 
-  private getLogoUrl(): string {
-    return `${process.env.SERVER_HOST}/api/v1/email`;
-  }
-
   async enviarNotificacionTicketAprobado(ticket: Ticket): Promise<void> {
-    const logoUrl = this.getLogoUrl();
     // Se notifica a los involucrados: solicitante y receptor.
     const destinatarios: string[] = [];
     if (ticket.solicitante?.email) {
@@ -55,9 +50,7 @@ export class TicketsEmailNotificationService {
                   <td style="padding:20px; background-color:rgb(120,69,172);">
                     <table role="presentation" style="width:100%;">
                       <tr>
-                        <td style="width:50px;">
-                          <img src="${logoUrl}" alt="Logo Nexo Health" width="50" style="display:block; border-radius:50px;">
-                        </td>
+                        
                         <td style="padding-left:10px; color:#ffffff; font-family:Arial, sans-serif; font-size:24px;">
                           Nexo Health
                         </td>
@@ -104,7 +97,6 @@ export class TicketsEmailNotificationService {
   }
 
   async enviarNotificacionTicketPendiente(ticket: Ticket): Promise<void> {
-    const logoUrl = this.getLogoUrl();
     // Para ticket pendiente, notifica al receptor (quien debe aprobar)
     const destinatarios: string[] = [];
     if (ticket.consentimientoReceptor === 'Pendiente') {
@@ -149,9 +141,7 @@ export class TicketsEmailNotificationService {
                   <td style="padding:20px; background-color:rgb(120,69,172);">
                     <table style="width:100%;">
                       <tr>
-                        <td style="width:50px;">
-                          <img src="${logoUrl}" alt="Logo Nexo Health" width="50" style="display:block; border-radius:50px;">
-                        </td>
+                        
                         <td style="padding-left:10px; color:#ffffff; font-family:Arial, sans-serif; font-size:24px;">
                           Nexo Health
                         </td>
@@ -202,7 +192,6 @@ export class TicketsEmailNotificationService {
   }
 
   async enviarNotificacionTicketRechazado(ticket: Ticket): Promise<void> {
-    const logoUrl = this.getLogoUrl();
     // Para ticket rechazado se notifica a solicitante y receptor.
     const destinatarios: string[] = [];
     if (ticket.solicitante?.email) {
@@ -244,9 +233,7 @@ export class TicketsEmailNotificationService {
                   <td style="padding:20px; background-color:rgb(120,69,172);">
                     <table style="width:100%;">
                       <tr>
-                        <td style="width:50px;">
-                          <img src="${logoUrl}" alt="Logo Nexo Health" width="50" style="display:block; border-radius:50px;">
-                        </td>
+                        
                         <td style="padding-left:10px; color:#ffffff; font-family:Arial, sans-serif; font-size:24px;">
                           Nexo Health
                         </td>
@@ -295,7 +282,6 @@ export class TicketsEmailNotificationService {
   }
 
   async enviarNotificacionTicketArchivado(ticket: Ticket): Promise<void> {
-    const logoUrl = this.getLogoUrl();
     // Para ticket archivado se notifica a solicitante y receptor.
     const destinatarios: string[] = [];
     if (ticket.solicitante?.email) {
@@ -337,9 +323,7 @@ export class TicketsEmailNotificationService {
                   <td style="padding:20px; background-color:rgb(120,69,172);">
                     <table style="width:100%;">
                       <tr>
-                        <td style="width:50px;">
-                          <img src="${logoUrl}" alt="Logo Nexo Health" width="50" style="display:block; border-radius:50px;">
-                        </td>
+                        
                         <td style="padding-left:10px; color:#ffffff; font-family:Arial, sans-serif; font-size:24px;">
                           Nexo Health
                         </td>

@@ -285,29 +285,34 @@ export class UsersService {
       .leftJoinAndSelect('ticket.solicitante', 'solicitante')
       .where('ticket.receptor = :id', { id })
       .andWhere(
-        'ticket.consentimientoReceptor = :aceptado OR ticket.consentimientoReceptor = :pendiente',
-        {
-          aceptado: EstadoConsentimiento.Aceptado,
-          pendiente: EstadoConsentimiento.Pendiente,
-        },
+        new Brackets((qb) => {
+          qb.where('ticket.consentimientoReceptor = :aceptado', {
+            aceptado: EstadoConsentimiento.Aceptado,
+          }).orWhere('ticket.consentimientoReceptor = :pendiente', {
+            pendiente: EstadoConsentimiento.Pendiente,
+          });
+        }),
       )
       .andWhere(
-        'ticket.consentimientoSolicitante = :aceptado OR ticket.consentimientoSolicitante = :pendiente',
-        {
-          aceptado: EstadoConsentimiento.Aceptado,
-          pendiente: EstadoConsentimiento.Pendiente,
-        },
+        new Brackets((qb) => {
+          qb.where('ticket.consentimientoSolicitante = :aceptado', {
+            aceptado: EstadoConsentimiento.Aceptado,
+          }).orWhere('ticket.consentimientoSolicitante = :pendiente', {
+            pendiente: EstadoConsentimiento.Pendiente,
+          });
+        }),
       )
       .andWhere(
-        'ticket.consentimientoUsuario = :aceptado OR ticket.consentimientoUsuario = :pendiente',
-        {
-          aceptado: EstadoConsentimiento.Aceptado,
-          pendiente: EstadoConsentimiento.Pendiente,
-        },
+        new Brackets((qb) => {
+          qb.where('ticket.consentimientoUsuario = :aceptado', {
+            aceptado: EstadoConsentimiento.Aceptado,
+          }).orWhere('ticket.consentimientoUsuario = :pendiente', {
+            pendiente: EstadoConsentimiento.Pendiente,
+          });
+        }),
       )
       .andWhere('ticket.fechaBaja IS NULL')
       .getMany();
-
     const calcularTiempoRestante = (fecha: Date) => {
       const tiempoRestante = fecha.getTime() - new Date().getTime();
       const dias = Math.floor(tiempoRestante / (1000 * 60 * 60 * 24));

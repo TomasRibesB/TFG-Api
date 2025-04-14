@@ -24,7 +24,6 @@ export class DocumentosEmailNotificationService {
       return;
     }
 
-    const logoUrl = this.getLogoUrl();
     const subject = 'Archivo de Profesional Externo Subido';
     const html = `
       <!DOCTYPE html>
@@ -42,9 +41,7 @@ export class DocumentosEmailNotificationService {
                   <td style="padding:20px; background-color:rgb(120,69,172);">
                     <table role="presentation" style="width:100%;">
                       <tr>
-                        <td style="width:50px;">
-                          <img src="${logoUrl}" alt="Logo Nexo Health" width="50" style="display:block; border-radius:50px;">
-                        </td>
+                        
                         <td style="padding-left:10px; color:#ffffff; font-family:Arial, sans-serif; font-size:24px;">
                           Nexo Health
                         </td>
