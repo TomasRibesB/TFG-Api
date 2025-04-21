@@ -17,7 +17,7 @@ export class Ticket {
   @Column({ length: 100, nullable: false })
   asunto: string;
 
-  @Column({ nullable: false })
+  @Column({ type: 'text', nullable: false })
   descripcion: string;
 
   @Column({ nullable: false })

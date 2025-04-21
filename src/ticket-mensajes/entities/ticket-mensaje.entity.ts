@@ -29,6 +29,6 @@ export class TicketMensaje {
   })
   estado: EstadoMensaje;
 
-  @Column({ nullable: false })
+  @Column({ type: 'text', nullable: false })
   mensaje: string;
 }
