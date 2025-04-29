@@ -8,10 +8,11 @@ import { PermisoDocumento } from './entities/permisoDocumento.entity';
 import { User } from 'src/users/entities/user.entity';
 import { DocumentosEmailNotificationService } from './documentos.email.notification.service';
 import { EmailModule } from 'src/email/email.module';
+import { CryptoService } from './crypto.service';
 
 @Module({
   controllers: [DocumentosController],
-  providers: [DocumentosService, DocumentosEmailNotificationService],
+  providers: [DocumentosService, DocumentosEmailNotificationService, CryptoService],
   imports: [
     TypeOrmModule.forFeature([
       Documento,

@@ -110,3 +110,4 @@ EMAIL_HOST=
 JWT_SECRET=
 SERVER_HOST=
 CLIENT_HOST=
+FILE_ENCRYPTION_KEY= { debe ser una key aes-256-cbc de 32-bits }

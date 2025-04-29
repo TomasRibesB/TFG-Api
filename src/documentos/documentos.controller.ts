@@ -22,10 +22,14 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { Response as ExpressResponse } from 'express';
 import { PermisoDocumento } from './entities/permisoDocumento.entity';
 import { Documento } from './entities/documento.entity';
+import { CryptoService } from './crypto.service';
 
 @Controller('documentos')
 export class DocumentosController {
-  constructor(private readonly documentosService: DocumentosService) {}
+  constructor(
+    private readonly documentosService: DocumentosService,
+    private readonly cryptoService: CryptoService,
+  ) {}
 
   @UseGuards(AuthGuard)
   @Post()
@@ -138,7 +142,7 @@ export class DocumentosController {
       return res.status(404).send('Archivo no encontrado');
     }
 
-    const archivo = documento.archivo;
+    const archivo = this.cryptoService.decrypt(documento.archivo);
     const headerUtf8 = archivo.slice(0, 4).toString('utf8');
     const headerHex = archivo.slice(0, 4).toString('hex');
 

@@ -15,7 +15,7 @@ import * as sharp from 'sharp';
 import { User } from 'src/users/entities/user.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { DocumentosEmailNotificationService } from './documentos.email.notification.service';
-
+import { CryptoService } from './crypto.service';
 @Injectable()
 export class DocumentosService {
   constructor(
@@ -28,6 +28,7 @@ export class DocumentosService {
     @InjectRepository(User)
     private userRepository: Repository<User>,
     private readonly documentosEmailNotificationService: DocumentosEmailNotificationService,
+    private readonly cryptoService: CryptoService,
   ) {}
 
   async create(createDocumentoDto: CreateDocumentoDto): Promise<Documento> {
@@ -100,8 +101,9 @@ export class DocumentosService {
 
     // Actualizar directamente en la base de datos evitando volver a insertar
 
+    const encryptedBuffer = this.cryptoService.encrypt(processedBuffer);
     await this.documentoRepository.update(id, {
-      archivo: processedBuffer,
+      archivo: encryptedBuffer,
       hasArchivo: true,
     });
     return await this.documentoRepository.findOne({ where: { id } });
@@ -190,11 +192,11 @@ export class DocumentosService {
       .where('documento.id = :id', { id })
       .andWhere('documento.fechaBaja IS NULL')
       .andWhere(
-         new Brackets(qb => {
-           qb.where('visibilidad.id = :userId', { userId })
-             .orWhere('usuario.id = :userId', { userId })
-             .orWhere('profesional.id = :userId', { userId });
-         }),
+        new Brackets((qb) => {
+          qb.where('visibilidad.id = :userId', { userId })
+            .orWhere('usuario.id = :userId', { userId })
+            .orWhere('profesional.id = :userId', { userId });
+        }),
       )
       .getOne();
 
@@ -202,7 +204,7 @@ export class DocumentosService {
       throw new Error(`Documento con id ${id} no encontrado`);
     }
     return documento;
-}
+  }
 
   async createPermisoDocumento(usuarioId: number): Promise<PermisoDocumento> {
     const permisoActivo = await this.permisoDocumentoRepository.findOne({
@@ -339,8 +341,9 @@ export class DocumentosService {
     }
 
     // Actualizar directamente en la base de datos evitando volver a insertar
+    const encryptedBuffer = this.cryptoService.encrypt(processedBuffer);
     await this.documentoRepository.update(id, {
-      archivo: processedBuffer,
+      archivo: encryptedBuffer,
       hasArchivo: true,
     });
     return await this.documentoRepository.findOne({ where: { id } });
