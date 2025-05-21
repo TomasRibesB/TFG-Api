@@ -93,7 +93,7 @@ export class DocumentosController {
     @Param('userId') userId: string,
     @Req() request: RequestWithUser,
   ) {
-    return this.documentosService.findDocumentsFoyProfesionalByUser(
+    return this.documentosService.findDocumentsForProfessionalByUser(
       request.user.id,
       +userId,
     );
@@ -105,7 +105,7 @@ export class DocumentosController {
     @Param('userId') userId: string,
     @Req() request: RequestWithUser,
   ) {
-    return this.documentosService.findVisibleDocumentsForProfesionalByUser(
+    return this.documentosService.findVisibleDocumentsForProfessionalByUser(
       request.user.id,
       +userId,
     );
@@ -142,7 +142,7 @@ export class DocumentosController {
       return res.status(404).send('Archivo no encontrado');
     }
 
-    const archivo = this.cryptoService.decrypt(documento.archivo);
+    const archivo = this.cryptoService.decryptBuffer(documento.archivo);
     const headerUtf8 = archivo.slice(0, 4).toString('utf8');
     const headerHex = archivo.slice(0, 4).toString('hex');
 

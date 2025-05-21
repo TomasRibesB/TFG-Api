@@ -4,24 +4,46 @@ import { createCipheriv, createDecipheriv, randomBytes } from 'crypto';
 @Injectable()
 export class CryptoService implements OnModuleInit {
   private key: Buffer;
+
   async onModuleInit() {
-    // Lee tu clave de entorno, hex string de 64 chars → 32 bytes
     this.key = Buffer.from(process.env.FILE_ENCRYPTION_KEY, 'hex');
   }
 
-  encrypt(buffer: Buffer): Buffer {
-    const iv = randomBytes(16); // AES block size
+  encryptBuffer(buffer: Buffer): Buffer {
+    const iv = randomBytes(16);
     const cipher = createCipheriv('aes-256-cbc', this.key, iv);
     const encrypted = Buffer.concat([cipher.update(buffer), cipher.final()]);
-    // Prepend IV para descifrar luego
     return Buffer.concat([iv, encrypted]);
   }
 
-  decrypt(buffer: Buffer): Buffer {
-    // Extrae el IV de los primeros 16 bytes
+  decryptBuffer(buffer: Buffer): Buffer {
     const iv = buffer.slice(0, 16);
     const content = buffer.slice(16);
     const decipher = createDecipheriv('aes-256-cbc', this.key, iv);
     return Buffer.concat([decipher.update(content), decipher.final()]);
+  }
+
+  // ——— Nuevas versiones con prefijo y try/catch ———
+
+  encryptString(text: string): string {
+    const buf = Buffer.from(text, 'utf8');
+    const enc = this.encryptBuffer(buf).toString('base64');
+    return `ENC:${enc}`;
+  }
+
+  decryptString(data: string): string {
+    if (!data?.startsWith('ENC:')) {
+      // No está marcado como cifrado, lo devuelvo tal cual
+      return data;
+    }
+
+    try {
+      const base64 = data.slice(4);
+      const buf = Buffer.from(base64, 'base64');
+      return this.decryptBuffer(buf).toString('utf8');
+    } catch {
+      // Si algo sale mal, devuelvo el string original
+      return data;
+    }
   }
 }

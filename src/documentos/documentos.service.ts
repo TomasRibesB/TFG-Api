@@ -30,6 +30,19 @@ export class DocumentosService {
     private readonly documentosEmailNotificationService: DocumentosEmailNotificationService,
     private readonly cryptoService: CryptoService,
   ) {}
+  private decryptDocumento(d: Documento): Documento {
+    if (d.titulo) {
+      d.titulo = this.cryptoService.decryptString(d.titulo);
+    }
+    if (d.descripcion) {
+      d.descripcion = this.cryptoService.decryptString(d.descripcion);
+    }
+    return d;
+  }
+
+  private decryptDocumentos(docs: Documento[]): Documento[] {
+    return docs.map((d) => this.decryptDocumento(d));
+  }
 
   async create(createDocumentoDto: CreateDocumentoDto): Promise<Documento> {
     const documento: Partial<Documento> =
@@ -45,9 +58,17 @@ export class DocumentosService {
       }
       documento.tipoProfesional = tipoProfesional;
     }
+    documento.titulo = this.cryptoService.encryptString(
+      createDocumentoDto.titulo,
+    );
+    documento.descripcion = this.cryptoService.encryptString(
+      createDocumentoDto.descripcion,
+    );
     documento.usuario = { id: createDocumentoDto.usuarioId } as any;
     documento.profesional = { id: createDocumentoDto.profesionalId } as any;
-    return await this.documentoRepository.save(documento);
+    return this.decryptDocumento(
+      await this.documentoRepository.save(documento),
+    );
   }
 
   async update(updateDocumentoDto: UpdateDocumentoDto): Promise<Documento> {
@@ -72,10 +93,18 @@ export class DocumentosService {
       documento.tipoProfesional = tipoProfesional;
     }
 
+    documento.titulo = this.cryptoService.encryptString(
+      updateDocumentoDto.titulo,
+    );
+    documento.descripcion = this.cryptoService.encryptString(
+      updateDocumentoDto.descripcion,
+    );
     documento.usuario = { id: updateDocumentoDto.usuarioId } as any;
     documento.profesional = { id: updateDocumentoDto.profesionalId } as any;
 
-    return await this.documentoRepository.save(documento);
+    return this.decryptDocumento(
+      await this.documentoRepository.save(documento),
+    );
   }
 
   async uploadDocumentoArchivo(id: number, archivoBuffer: Buffer) {
@@ -101,12 +130,14 @@ export class DocumentosService {
 
     // Actualizar directamente en la base de datos evitando volver a insertar
 
-    const encryptedBuffer = this.cryptoService.encrypt(processedBuffer);
+    const encryptedBuffer = this.cryptoService.encryptBuffer(processedBuffer);
     await this.documentoRepository.update(id, {
       archivo: encryptedBuffer,
       hasArchivo: true,
     });
-    return await this.documentoRepository.findOne({ where: { id } });
+    return await this.decryptDocumento(
+      await this.documentoRepository.findOne({ where: { id } }),
+    );
   }
 
   async remove(id: number, profesionalId: number) {
@@ -123,35 +154,38 @@ export class DocumentosService {
     } else {
       documento.fechaBaja = new Date();
     }
-    return await this.documentoRepository.save(documento);
+    return await this.decryptDocumento(
+      await this.documentoRepository.save(documento),
+    );
   }
 
-  async findByUser(id: number) {
-    return this.documentoRepository.find({
+  async findByUser(id: number): Promise<Documento[]> {
+    const datos = await this.documentoRepository.find({
       where: { usuario: { id }, fechaBaja: IsNull() },
       relations: ['profesional', 'visibilidad'],
     });
+    return this.decryptDocumentos(datos);
   }
 
-  async findDocumentsFoyProfesionalByUser(
+  async findDocumentsForProfessionalByUser(
     profesionalId: number,
     userId: number,
-  ) {
-    console.log(profesionalId, userId);
-    return this.documentoRepository.find({
+  ): Promise<Documento[]> {
+    const datos = await this.documentoRepository.find({
       where: {
         usuario: { id: userId },
         profesional: { id: profesionalId },
       },
       relations: ['usuario'],
     });
+    return this.decryptDocumentos(datos);
   }
 
-  async findVisibleDocumentsForProfesionalByUser(
+  async findVisibleDocumentsForProfessionalByUser(
     profesionalId: number,
     userId: number,
-  ) {
-    return this.documentoRepository.find({
+  ): Promise<Documento[]> {
+    const datos = await this.documentoRepository.find({
       where: {
         usuario: { id: userId },
         visibilidad: { id: profesionalId },
@@ -160,6 +194,7 @@ export class DocumentosService {
       },
       relations: ['usuario'],
     });
+    return this.decryptDocumentos(datos);
   }
 
   async asignarVisibilidadDocumento(
@@ -179,7 +214,9 @@ export class DocumentosService {
     });
 
     documento.visibilidad = profesionales;
-    return await this.documentoRepository.save(documento);
+    return await this.decryptDocumento(
+      await this.documentoRepository.save(documento),
+    );
   }
 
   async findOneWithArchivo(id: number, userId: number): Promise<Documento> {
@@ -203,7 +240,7 @@ export class DocumentosService {
     if (!documento) {
       throw new Error(`Documento con id ${id} no encontrado`);
     }
-    return documento;
+    return this.decryptDocumento(documento);
   }
 
   async createPermisoDocumento(usuarioId: number): Promise<PermisoDocumento> {
@@ -278,6 +315,12 @@ export class DocumentosService {
         `PermisoDocumento con code ${code} dado de baja`,
       );
     }
+    createDocumentoDto.titulo = this.cryptoService.encryptString(
+      createDocumentoDto.titulo,
+    );
+    createDocumentoDto.descripcion = this.cryptoService.encryptString(
+      createDocumentoDto.descripcion,
+    );
     const newDocumento = this.documentoRepository.create({
       ...createDocumentoDto,
       usuario: { id: permisoDocumento.usuario.id },
@@ -285,17 +328,19 @@ export class DocumentosService {
     });
     const result = await this.documentoRepository.save(newDocumento);
 
-    const documentoResult: Documento = await this.documentoRepository.findOne({
+    let documentoResult: Documento = await this.documentoRepository.findOne({
       where: { id: result.id },
       relations: ['usuario'],
     });
+
+    documentoResult = this.decryptDocumento(documentoResult);
 
     // Enviar notificación por correo electrónico
     await this.documentosEmailNotificationService.enviarNotificacionArchivoProfesionalExterno(
       documentoResult,
     );
 
-    return result;
+    return this.decryptDocumento(result);
   }
 
   async uploadDocumentoArchivoByNoUser(
@@ -341,12 +386,14 @@ export class DocumentosService {
     }
 
     // Actualizar directamente en la base de datos evitando volver a insertar
-    const encryptedBuffer = this.cryptoService.encrypt(processedBuffer);
+    const encryptedBuffer = this.cryptoService.encryptBuffer(processedBuffer);
     await this.documentoRepository.update(id, {
       archivo: encryptedBuffer,
       hasArchivo: true,
     });
-    return await this.documentoRepository.findOne({ where: { id } });
+    return await this.decryptDocumento(
+      await this.documentoRepository.findOne({ where: { id } }),
+    );
   }
   async deleteDocumentoHard(
     documentoId: number,
@@ -368,7 +415,7 @@ export class DocumentosService {
     }
     // Limpiar las relaciones de visibilidad
     documento.visibilidad = [];
-    await this.documentoRepository.save(documento);
+    await this.decryptDocumento(await this.documentoRepository.save(documento));
     // Borrar definitivamente el documento
     await this.documentoRepository.remove(documento);
   }
