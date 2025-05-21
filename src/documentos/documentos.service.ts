@@ -185,15 +185,26 @@ export class DocumentosService {
     profesionalId: number,
     userId: number,
   ): Promise<Documento[]> {
+    const commonWhere = {
+      usuario: { id: userId },
+      visibilidad: { id: profesionalId },
+      fechaBaja: IsNull(),
+    };
+
     const datos = await this.documentoRepository.find({
-      where: {
-        usuario: { id: userId },
-        visibilidad: { id: profesionalId },
-        profesional: { id: Not(profesionalId) },
-        fechaBaja: IsNull(),
-      },
-      relations: ['usuario'],
+      where: [
+        {
+          ...commonWhere,
+          profesional: { id: Not(profesionalId) },
+        },
+        {
+          ...commonWhere,
+          profesional: IsNull(),
+        },
+      ],
+      relations: ['usuario', 'profesional', 'visibilidad'],
     });
+
     return this.decryptDocumentos(datos);
   }
 
