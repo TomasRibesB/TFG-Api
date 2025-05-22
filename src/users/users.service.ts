@@ -363,16 +363,7 @@ export class UsersService {
   }
 
   async getRecordatoriosByUser(id: number) {
-    const fechaObjetivo = new Date();
-    fechaObjetivo.setDate(fechaObjetivo.getDate() + 2); // 2 días después
-    const inicioDelDia = new Date(fechaObjetivo);
-    inicioDelDia.setHours(0, 0, 0, 0);
-    const finDelDia = new Date(fechaObjetivo);
-    finDelDia.setHours(23, 59, 59, 999);
-
-    // Si la hora actual ya es mayor al inicio del día dos días después, usamos la hora actual como inicio de la consulta
     const now = new Date();
-    const inicioConsulta = now > inicioDelDia ? now : inicioDelDia;
 
     // Obtener turnos en dos días donde el usuario es el paciente
     const turnosEnDosDias = await this.userRepository.manager
@@ -381,9 +372,8 @@ export class UsersService {
       .leftJoinAndSelect('turno.profesional', 'profesional')
       .leftJoinAndSelect('turno.paciente', 'paciente')
       .where('turno.paciente = :id', { id })
-      .andWhere('turno.fechaHora BETWEEN :inicioConsulta AND :finDelDia', {
-        inicioConsulta,
-        finDelDia,
+      .andWhere('turno.fechaHora >= :now', {
+        now,
       })
       .getMany();
 

@@ -16,7 +16,7 @@ export class TurnosEmailNotificationService {
     private readonly emailService: EmailService,
   ) {
     // Programa la tarea cada 5 minutos para pruebas (ajusta según necesidad)
-    cron.schedule('*/5 * * * *', () => {
+    cron.schedule('*/1 * * * *', () => {
       this.enviarNotificacionesTurnos();
     });
   }
